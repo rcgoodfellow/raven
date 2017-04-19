@@ -1,0 +1,26 @@
+{{set . "title" "Home"}}
+{{template "header.html" .}}
+    
+<div id="controls">
+  <div>
+    <button onclick="push()">push</button>
+    <button onclick="status()">status</button>
+    <button onclick="destroy()">destroy</button>
+    <button onclick="launch()">launch</button>
+  </div>
+</div>
+
+<div id="tb">
+  <input 
+     type="file" 
+     id="tbfile" 
+     name="tbfile" 
+     onchange="handleUpload(this);" 
+     onclick="this.value = null;"
+     />
+  <div id="tb-net"> </div>
+  <div id="tb-info"></div>
+</div>
+
+
+{{template "footer.html" .}}

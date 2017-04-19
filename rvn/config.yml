@@ -1,0 +1,23 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+    - name: set hostname
+      hostname:
+        name: {{.Name}}
+
+    - name: put hostname in /etc/hosts
+      lineinfile:
+        name: /etc/hosts
+        line: '127.0.0.1    {{.Name}}'
+
+{{range .Mounts}}
+    - name: mount {{.Point}}
+      mount:
+        name: {{.Point}}
+        src: {{.Tag}}
+        fstype: 9p
+        opts: trans=virtio,rw
+        state: mounted
+{{- end}}
