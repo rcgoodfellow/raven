@@ -22,7 +22,7 @@ func genConfig(h Host, topo Topo) {
 		return
 	}
 
-	path := fmt.Sprintf("/%s/%s/%s.yml", sysDir(), topo.Name, h.Name)
+	path := fmt.Sprintf("/%s/%s/%s.yml", SysDir(), topo.Name, h.Name)
 	f, err := os.Create(path)
 	if err != nil {
 		log.Printf("failed to create path %s - %v", path, err)
@@ -44,7 +44,7 @@ func Configure(topoName string) {
 
 	var wg sync.WaitGroup
 	doConfig := func(topo Topo, host Host, ds DomStatus) {
-		yml := fmt.Sprintf("%s/%s/%s.yml", sysDir(), topo.Name, host.Name)
+		yml := fmt.Sprintf("%s/%s/%s.yml", SysDir(), topo.Name, host.Name)
 		runConfig(yml, topo.Name, host, ds)
 
 		user_yml := fmt.Sprintf("%s/%s.yml", topo.Dir, host.Name)

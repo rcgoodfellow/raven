@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"os/user"
 	"strings"
 )
 
@@ -24,7 +23,7 @@ import (
 // topology with the same name as the topology provided as an argument exists,
 // that topology will be overwritten by the system generated from the argument.
 func Create(topo Topo) {
-	topoDir := sysDir() + "/" + topo.Name
+	topoDir := SysDir() + "/" + topo.Name
 	os.MkdirAll(topoDir, 0755)
 
 	doms := make(map[string]*xlibvirt.Domain)
@@ -141,7 +140,7 @@ func Destroy(topoName string) {
 	defer conn.Close()
 
 	topo := loadTopo(topoName)
-	topoDir := sysDir() + "/" + topo.Name
+	topoDir := SysDir() + "/" + topo.Name
 	exec.Command("rm", "-rf", topoDir).Run()
 
 	for _, x := range topo.Nodes {
@@ -311,7 +310,7 @@ func mountDirs(h *Host, d *xlibvirt.Domain) {
 func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 
 	baseImage := "/var/rvn/img/" + h.OS + ".qcow2"
-	instanceImage := sysDir() + "/" + t.Name + "/" + h.Name + ".qcow2"
+	instanceImage := SysDir() + "/" + t.Name + "/" + h.Name + ".qcow2"
 	exec.Command("rm", "-f", instanceImage).Run()
 
 	err := exec.Command(
@@ -384,15 +383,21 @@ func domConnect(net string, dom *xlibvirt.Domain) {
 		})
 }
 
-func sysDir() string {
-	u, _ := user.Current()
-	return u.HomeDir + "/.rvn/systems"
-}
-
 func loadTopo(name string) Topo {
-	topoDir := sysDir() + "/" + name
+	topoDir := SysDir() + "/" + name
 	path := topoDir + "/" + name + ".json"
 	return LoadTopo(path)
+}
+
+func DomainStatus(name string) (DomStatus, error) {
+	conn, err := libvirt.NewConnect("qemu:///system")
+	if err != nil {
+		log.Printf("libvirt connect failure: %v", err)
+		return DomStatus{}, err
+	}
+	defer conn.Close()
+
+	return domainStatus(name, conn), nil
 }
 
 func domainStatus(name string, conn *libvirt.Connect) DomStatus {

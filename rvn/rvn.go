@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os/user"
 )
 
 type Mount struct {
@@ -49,6 +50,16 @@ type Topo struct {
 func LoadTopo(path string) Topo {
 	f, _ := ioutil.ReadFile(path)
 	return ReadTopo(f)
+}
+
+func LoadTopoByName(system string) Topo {
+	path := fmt.Sprintf("%/%/model.json", SysDir(), system)
+	return LoadTopo(path)
+}
+
+func SysDir() string {
+	u, _ := user.Current()
+	return u.HomeDir + "/.rvn/systems"
 }
 
 func ReadTopo(src []byte) Topo {
