@@ -51,6 +51,9 @@ func Create(topo Topo) {
 			Name:      topo.Name + ".net",
 			LocalOnly: "yes",
 		},
+		Forward: &xlibvirt.NetworkForward{
+			Mode: "nat",
+		},
 	}
 
 	for _, node := range topo.Nodes {
