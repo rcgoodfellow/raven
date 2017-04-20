@@ -51,10 +51,12 @@ func Configure(topoName string) {
 
 func runConfig(topo string, h Host, s DomStatus) {
 	yml := fmt.Sprintf("%s/%s/%s.yml", sysDir(), topo, h.Name)
+	log.Printf("configuring %s:%s", topo, h.Name)
 	out, err := exec.Command(
 		"ansible-playbook",
 		"-i", s.IP+",",
 		yml,
+		"--extra-vars", "ansible_become_pass=rvn",
 		`--ssh-extra-args='-i/var/rvn/ssh/rvn'`,
 		"--user=rvn",
 	).Output()
