@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 	"text/template"
 )
 
@@ -41,12 +42,24 @@ func Configure(topoName string) {
 	node_status := status["nodes"].(map[string]DomStatus)
 	switch_status := status["switches"].(map[string]DomStatus)
 
+	var wg sync.WaitGroup
+	doConfig := func(topo string, host Host, ds DomStatus) {
+		runConfig(topo, host, ds)
+		wg.Done()
+	}
+
 	for _, x := range topo.Nodes {
-		runConfig(topo.Name, x.Host, node_status[x.Name])
+		wg.Add(1)
+		go doConfig(topo.Name, x.Host, node_status[x.Name])
 	}
 	for _, x := range topo.Switches {
-		runConfig(topo.Name, x.Host, switch_status[x.Name])
+		wg.Add(1)
+		go doConfig(topo.Name, x.Host, switch_status[x.Name])
 	}
+
+	wg.Wait()
+
+	log.Println("configuration of all nodes complete")
 }
 
 func runConfig(topo string, h Host, s DomStatus) {
