@@ -219,9 +219,12 @@ func Launch(topoName string) []string {
 
 	for _, net := range nets {
 		err := net.Create()
+		name, _ := net.GetName()
 		if err != nil {
-			name, _ := net.GetName()
 			errors = append(errors, fmt.Sprintf("%s: %v", name, err))
+		}
+		if name != topo.QualifyName("test") {
+			setBridgeProperties(net)
 		}
 		net.Free()
 	}
@@ -280,6 +283,17 @@ func Status(topoName string) map[string]interface{} {
 		links[x.Name] = networkStatus(topo.QualifyName(x.Name), conn)
 	}
 	return status
+}
+
+func DomainStatus(name string) (DomStatus, error) {
+	conn, err := libvirt.NewConnect("qemu:///system")
+	if err != nil {
+		log.Printf("libvirt connect failure: %v", err)
+		return DomStatus{}, err
+	}
+	defer conn.Close()
+
+	return domainStatus(name, conn), nil
 }
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -392,17 +406,6 @@ func loadTopo(name string) Topo {
 	return LoadTopo(path)
 }
 
-func DomainStatus(name string) (DomStatus, error) {
-	conn, err := libvirt.NewConnect("qemu:///system")
-	if err != nil {
-		log.Printf("libvirt connect failure: %v", err)
-		return DomStatus{}, err
-	}
-	defer conn.Close()
-
-	return domainStatus(name, conn), nil
-}
-
 func domainStatus(name string, conn *libvirt.Connect) DomStatus {
 	var status DomStatus
 	x, err := conn.LookupDomainByName(name)
@@ -476,5 +479,32 @@ func destroyNetwork(name string, conn *libvirt.Connect) {
 		x.Destroy()
 		x.Undefine()
 		x.Free()
+	}
+}
+
+func setBridgeProperties(net *libvirt.Network) {
+	allowLLDP(net)
+}
+
+func allowLLDP(net *libvirt.Network) {
+	name, _ := net.GetName()
+	br, err := net.GetBridgeName()
+	if err != nil {
+		log.Printf("error getting bridge for %s - %v", name, err)
+		return
+	}
+
+	err = ioutil.WriteFile(
+		fmt.Sprintf("/sys/class/net/%s/bridge/group_fwd_mask", br),
+		[]byte("16384"),
+		0644,
+	)
+
+	if err != nil {
+		log.Printf("unable to set group forwarding mask on bridge %s - %v",
+			name,
+			err,
+		)
+		return
 	}
 }

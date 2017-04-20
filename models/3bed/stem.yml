@@ -3,7 +3,15 @@
   become: true
 
   tasks:
-    - name: run the muffin man
-      file:
-        path: /opt/muffinman.txt
-        state: touch
+    - name: copy interfaces file
+      copy:
+        src: "{{ playbook_dir }}/stem_interfaces"
+        dest: /etc/network/interfaces
+
+    - name: bring up interfaces
+      command: ifup -a
+
+    - name: restart lldpd
+      service:
+        name: lldpd
+        state: restarted
