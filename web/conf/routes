@@ -12,6 +12,7 @@ POST    /rvn-push                               App.Push
 GET     /rvn-status                             App.Status
 GET     /rvn-destroy                            App.Destroy
 GET     /rvn-launch                             App.Launch
+GET     /rvn-configure                          App.Configure
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

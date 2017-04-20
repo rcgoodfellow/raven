@@ -83,3 +83,16 @@ func (c App) Launch() revel.Result {
 		return c.RenderJSON(errors)
 	}
 }
+
+func (c App) Configure() revel.Result {
+	topo := c.Params.Query.Get("topo")
+	log.Printf("configure: topo=%s", topo)
+	if len(topo) == 0 {
+		c.Response.Status = 400
+		return c.RenderText("bad argument")
+	}
+
+	rvn.Configure(topo)
+	c.Response.Status = 200
+	return c.RenderText("ok")
+}

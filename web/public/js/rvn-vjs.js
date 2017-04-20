@@ -124,3 +124,10 @@ function launch() {
     console.log(data);
   });
 }
+
+function configure() {
+  console.log('configure');
+  $.get("/rvn-configure?topo="+rspace.name, function(data) {
+    console.log(data);
+  });
+}
