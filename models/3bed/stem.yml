@@ -1,9 +1,9 @@
 ---
-- hosts: corehost
+- hosts: all
   become: true
 
   tasks:
     - name: run the muffin man
       file:
         path: /opt/muffinman.txt
-        state: file
+        state: touch

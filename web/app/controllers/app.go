@@ -45,7 +45,10 @@ func (c App) Index() revel.Result {
 		return c.RenderText("error running model %s", out)
 	}
 
-	model := template.JS("var topo = " + string(out) + ";")
+	topo := rvn.ReadTopo(out)
+	topo.Dir = dir
+	data, _ := json.MarshalIndent(topo, "", "  ")
+	model := template.JS("var topo = " + string(data) + ";")
 
 	return c.Render(title, moreStyles, moreScripts, model)
 }

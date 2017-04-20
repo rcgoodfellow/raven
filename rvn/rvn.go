@@ -8,12 +8,16 @@ import (
 )
 
 type Mount struct {
-	Point, Source, Tag string
+	Point  string `json:"point"`
+	Source string `json:"source"`
+	Tag    string `json:"tag"`
 }
 
 type Host struct {
-	Name, OS string
-	Mounts   []Mount
+	Name   string  `json:"name"`
+	OS     string  `json:"os"`
+	Mounts []Mount `json:"mounts"`
+	Level  int     `json:"level"`
 }
 
 type Zwitch struct {
@@ -25,25 +29,31 @@ type Node struct {
 }
 
 type Endpoint struct {
-	Name, Port string
+	Name string `json:"name"`
+	Port string `json:"port"`
 }
 
 type Link struct {
-	Name      string
-	Endpoints [2]Endpoint
+	Name      string      `json:"name"`
+	Endpoints [2]Endpoint `json:"endpoints"`
 }
 
 type Topo struct {
-	Name     string
-	Nodes    []Node
-	Switches []Zwitch
-	Links    []Link
+	Name     string   `json:"name"`
+	Nodes    []Node   `json:"nodes"`
+	Switches []Zwitch `json:"switches"`
+	Links    []Link   `json:"links"`
+	Dir      string   `json:"dir"`
 }
 
 func LoadTopo(path string) Topo {
 	f, _ := ioutil.ReadFile(path)
+	return ReadTopo(f)
+}
+
+func ReadTopo(src []byte) Topo {
 	var topo Topo
-	json.Unmarshal(f, &topo)
+	json.Unmarshal(src, &topo)
 	return topo
 }
 

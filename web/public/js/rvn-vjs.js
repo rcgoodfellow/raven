@@ -103,7 +103,7 @@ function push() {
   xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
   xhr.send(JSON.stringify(rspace));
   xhr.onloadend = function() {
-    console.log('deploy request completed');
+    console.log('push request completed');
   }
 }
 

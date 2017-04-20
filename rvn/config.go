@@ -43,18 +43,24 @@ func Configure(topoName string) {
 	switch_status := status["switches"].(map[string]DomStatus)
 
 	var wg sync.WaitGroup
-	doConfig := func(topo string, host Host, ds DomStatus) {
-		runConfig(topo, host, ds)
+	doConfig := func(topo Topo, host Host, ds DomStatus) {
+		yml := fmt.Sprintf("%s/%s/%s.yml", sysDir(), topo.Name, host.Name)
+		runConfig(yml, topo.Name, host, ds)
+
+		user_yml := fmt.Sprintf("%s/%s.yml", topo.Dir, host.Name)
+		if _, err := os.Stat(user_yml); err == nil {
+			runConfig(user_yml, topo.Name, host, ds)
+		}
 		wg.Done()
 	}
 
 	for _, x := range topo.Nodes {
 		wg.Add(1)
-		go doConfig(topo.Name, x.Host, node_status[x.Name])
+		go doConfig(topo, x.Host, node_status[x.Name])
 	}
 	for _, x := range topo.Switches {
 		wg.Add(1)
-		go doConfig(topo.Name, x.Host, switch_status[x.Name])
+		go doConfig(topo, x.Host, switch_status[x.Name])
 	}
 
 	wg.Wait()
@@ -62,8 +68,7 @@ func Configure(topoName string) {
 	log.Println("configuration of all nodes complete")
 }
 
-func runConfig(topo string, h Host, s DomStatus) {
-	yml := fmt.Sprintf("%s/%s/%s.yml", sysDir(), topo, h.Name)
+func runConfig(yml, topo string, h Host, s DomStatus) {
 	log.Printf("configuring %s:%s", topo, h.Name)
 	out, err := exec.Command(
 		"ansible-playbook",
