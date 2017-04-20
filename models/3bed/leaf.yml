@@ -1,0 +1,17 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+    - name: copy interfaces file
+      copy:
+        src: "{{ playbook_dir }}/leaf_interfaces"
+        dest: /etc/network/interfaces
+
+    - name: bring up interfaces
+      command: ifup -a
+
+    - name: restart lldpd
+      service:
+        name: lldpd
+        state: restarted
