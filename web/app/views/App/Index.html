@@ -1,6 +1,6 @@
-{{set . "title" "Home"}}
-{{template "header.html" .}}
-    
+{{set . "title" "rvn"}}
+{{template "header.html" .}} 
+
 <div id="controls">
   <div>
     <button onclick="push()">push</button>
@@ -12,6 +12,7 @@
 </div>
 
 <div id="tb">
+<!--
   <input 
      type="file" 
      id="tbfile" 
@@ -19,9 +20,14 @@
      onchange="handleUpload(this);" 
      onclick="this.value = null;"
      />
+-->
   <div id="tb-net"> </div>
   <div id="tb-info"></div>
 </div>
 
+<script>
+{{.model}}
+showTopo(topo);
+</script>
 
 {{template "footer.html" .}}

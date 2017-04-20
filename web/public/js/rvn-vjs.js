@@ -71,6 +71,12 @@ function getTopo(src) {
  return topo; 
 }
 
+function showTopo(topo) {
+  rspace = topo;
+  var viz = rvnToVis(topo);
+  showResourceModel(viz);
+}
+
 function handleUpload(evt) {
   var file = evt.files[0];
   var reader = new FileReader();

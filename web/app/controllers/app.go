@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"github.com/rcgoodfellow/raven/rvn"
 	"github.com/revel/revel"
+	"html/template"
 	"io/ioutil"
 	"log"
+	"os/exec"
 )
 
 type App struct {
@@ -24,7 +26,28 @@ func (c App) Index() revel.Result {
 		"/public/js/rvn-vjs.js",
 		"/public/js/tb-to-visjs.js",
 	}
-	return c.Render(title, moreStyles, moreScripts)
+
+	dir := c.Params.Query.Get("dir")
+	if len(dir) == 0 {
+		c.Response.Status = 400
+		return c.RenderText("please provide a working directory")
+	}
+
+	out, err := exec.Command(
+		"nodejs",
+		"/usr/local/lib/rvn/run_model.js",
+		dir+"/model.js",
+	).CombinedOutput()
+
+	if err != nil {
+		log.Printf("error running model int %s - %s - %v", dir, out, err)
+		c.Response.Status = 400
+		return c.RenderText("error running model %s", out)
+	}
+
+	model := template.JS("var topo = " + string(out) + ";")
+
+	return c.Render(title, moreStyles, moreScripts, model)
 }
 
 func (c App) Push() revel.Result {

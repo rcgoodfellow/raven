@@ -1,0 +1,9 @@
+---
+- hosts: corehost
+  become: true
+
+  tasks:
+    - name: run the muffin man
+      file:
+        path: /opt/muffinman.txt
+        state: file

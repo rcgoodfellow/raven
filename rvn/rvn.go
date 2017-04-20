@@ -40,6 +40,13 @@ type Topo struct {
 	Links    []Link
 }
 
+func LoadTopo(path string) Topo {
+	f, _ := ioutil.ReadFile(path)
+	var topo Topo
+	json.Unmarshal(f, &topo)
+	return topo
+}
+
 func (t Topo) QualifyName(n string) string {
 	return t.Name + "_" + n
 }

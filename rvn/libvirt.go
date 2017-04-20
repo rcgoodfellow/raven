@@ -391,10 +391,8 @@ func sysDir() string {
 
 func loadTopo(name string) Topo {
 	topoDir := sysDir() + "/" + name
-	f, _ := ioutil.ReadFile(topoDir + "/" + name + ".json")
-	var topo Topo
-	json.Unmarshal(f, &topo)
-	return topo
+	path := topoDir + "/" + name + ".json"
+	return LoadTopo(path)
 }
 
 func domainStatus(name string, conn *libvirt.Connect) DomStatus {
