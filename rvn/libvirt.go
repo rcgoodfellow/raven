@@ -246,6 +246,7 @@ func Launch(topoName string) []string {
 type DomStatus struct {
 	State string
 	IP    string
+	VNC   int
 }
 
 // The status function returns the runtime status of a topology, node by node
@@ -346,6 +347,10 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 	d := &xlibvirt.Domain{
 		Type: "kvm",
 		Name: t.QualifyName(h.Name),
+		Features: &xlibvirt.DomainFeatureList{
+			ACPI: &xlibvirt.DomainFeature{},
+			APIC: &xlibvirt.DomainFeatureAPIC{},
+		},
 		OS: &xlibvirt.DomainOS{
 			Type: &xlibvirt.DomainOSType{Type: "hvm"},
 			BootDevices: []xlibvirt.DomainBootDevice{
@@ -380,7 +385,7 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 					Source: &xlibvirt.DomainDiskSource{
 						File: instanceImage,
 					},
-					Target: &xlibvirt.DomainDiskTarget{Dev: "sda", Bus: "sata"},
+					Target: &xlibvirt.DomainDiskTarget{Dev: "vda", Bus: "virtio"},
 				},
 			},
 		},

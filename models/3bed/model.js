@@ -9,9 +9,9 @@ Switch = (name, level, mounts) => ({
   'mounts': mounts
 });
 
-Node = (name, level, mounts) => ({
+Node = (name, level, mounts, os) => ({
   'name': name,
-  'os': 'debian-stretch',
+  'os': os,
   'level': level,
   'mounts': mounts
 });
@@ -23,12 +23,15 @@ deter_mount = {
 
 infra = ['boss', 'users', 'router'];
 nodes = [
-  ...Range(3).map(i => Node(`n${i}`, 3)),
-  ...infra.map(n => Node(n, 1, [deter_mount])),
-  Node('walrus', 2, [{
-    'source': '/home/ry/deter/walrustf',
-    'point': '/opt/walrus'
-  }])
+  ...Range(3).map(i => Node(`n${i}`, 3, [], 'debian-stretch')),
+  ...infra.map(n => Node(n, 1, [deter_mount], 'freebsd-11')),
+  Node('walrus', 
+    2, [{
+      'source': '/home/ry/deter/walrustf',
+      'point': '/opt/walrus'
+    }],
+    'debian-stretch'
+  )
 ];
 
 switches = [
