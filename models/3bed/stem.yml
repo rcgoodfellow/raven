@@ -7,6 +7,21 @@
       copy:
         src: "{{ playbook_dir }}/stem_interfaces"
         dest: /etc/network/interfaces
+    
+    - name: copy snmpd configuration
+      copy:
+        src: "{{ playbook_dir }}/snmpd.conf"
+        dest: /etc/snmp/snmpd.conf
+    
+    - name: copy lldpd configuration
+      copy:
+        src: "{{ playbook_dir }}/lldpd.conf"
+        dest: /etc/lldpd.d/lldpd.conf
+    
+    - name: copy lldpd defaults
+      copy:
+        src: "{{ playbook_dir }}/lldpd_default"
+        dest: /etc/default/lldpd
 
     - name: bring up interfaces
       command: ifup -a
@@ -14,4 +29,9 @@
     - name: restart lldpd
       service:
         name: lldpd
+        state: restarted
+    
+    - name: restart snmpd
+      service:
+        name: snmpd
         state: restarted

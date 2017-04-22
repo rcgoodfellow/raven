@@ -1,0 +1,4 @@
+# Add "-x" to DAEMON_ARGS to start SNMP subagent
+
+# Enable CDP by default
+DAEMON_ARGS="-c -x"

@@ -2,10 +2,11 @@
  * spine & leaf system
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-Switch = (name, level) => ({
+Switch = (name, level, mounts) => ({
   'name': name,
   'os': 'cumulus-latest',
-  'level': level
+  'level': level,
+  'mounts': mounts
 });
 
 Node = (name, level, mounts) => ({
@@ -15,15 +16,15 @@ Node = (name, level, mounts) => ({
   'mounts': mounts
 });
 
-
+deter_mount = {
+  'source': '/home/ry/deter',
+  'point': '/opt/deter'
+};
 
 infra = ['boss', 'users', 'router'];
 nodes = [
   ...Range(3).map(i => Node(`n${i}`, 3)),
-  ...infra.map(n => Node(n, 1, [{
-      'source': '/home/ry/deter', 
-      'point': '/usr/testbed/src'
-    }])),
+  ...infra.map(n => Node(n, 1, [deter_mount])),
   Node('walrus', 2, [{
     'source': '/home/ry/deter/walrustf',
     'point': '/opt/walrus'
@@ -31,8 +32,8 @@ nodes = [
 ];
 
 switches = [
-  Switch('stem', 2),
-  Switch('leaf', 4)
+  Switch('stem', 2, [deter_mount]),
+  Switch('leaf', 4, [deter_mount])
 ];
 
 links = [

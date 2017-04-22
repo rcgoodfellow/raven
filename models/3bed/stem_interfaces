@@ -30,3 +30,8 @@ iface swp7
 auto swp8
 iface swp8
 
+auto bridge
+iface bridge
+  bridge-vlan-aware yes
+  bridge-ports swp1 swp2 swp3 swp4 swp5 swp6 swp7 swp8
+  bridge-stp off
