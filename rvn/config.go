@@ -51,10 +51,12 @@ func Configure(topoName string) {
 	var wg sync.WaitGroup
 	doConfig := func(topo Topo, host Host, ds DomStatus) {
 		yml := fmt.Sprintf("%s/%s/%s.yml", SysDir(), topo.Name, host.Name)
+		log.Printf("running base config for %s:%s", topo.Name, host.Name)
 		runConfig(yml, topo.Name, host, ds)
 
 		user_yml := fmt.Sprintf("%s/%s.yml", topo.Dir, host.Name)
 		if _, err := os.Stat(user_yml); err == nil {
+			log.Printf("running user config for %s:%s", topo.Name, host.Name)
 			runConfig(user_yml, topo.Name, host, ds)
 		}
 		wg.Done()

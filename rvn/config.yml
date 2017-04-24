@@ -12,12 +12,6 @@
         name: /etc/hosts
         line: '127.0.0.1    {{.Host.Name}}'
 
-    - name: make sure nfs is installed
-      apt: name=nfs-common state=latest update_cache=yes
-      when: 
-        - ansible_os_family == "Debian"
-        - '"Cumulus" not in ansible_lsb.id'
-
 {{range .Host.Mounts}}
     - name: mount {{.Point}}
       mount:
