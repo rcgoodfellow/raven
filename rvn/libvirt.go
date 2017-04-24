@@ -30,12 +30,13 @@ func Create(topo Topo) {
 	nets := make(map[string]*xlibvirt.Network)
 
 	subnet := LoadRuntime().AllocateSubnet(topo.Name)
+	topo.MgmtIp = fmt.Sprintf("172.22.%d.1", subnet)
 
 	nets["test"] = &xlibvirt.Network{
 		Name: topo.QualifyName("test"),
 		IPs: []xlibvirt.NetworkIP{
 			xlibvirt.NetworkIP{
-				Address: fmt.Sprintf("172.22.%d.1", subnet),
+				Address: topo.MgmtIp,
 				Netmask: "255.255.255.0",
 				DHCP: &xlibvirt.NetworkDHCP{
 					Ranges: []xlibvirt.NetworkDHCPRange{
@@ -128,6 +129,9 @@ func Create(topo Topo) {
 			nn.Free()
 		}
 	}
+
+	//create NFS exports
+	ExportNFS(topo)
 
 }
 
@@ -327,7 +331,7 @@ func mountDirs(h *Host, d *xlibvirt.Domain) {
 
 func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 
-	baseImage := "/var/rvn/img/" + h.OS + ".qcow2"
+	baseImage := "/var/rvn/img/" + h.Image + ".qcow2"
 	instanceImage := SysDir() + "/" + t.Name + "/" + h.Name + ".qcow2"
 	exec.Command("rm", "-f", instanceImage).Run()
 

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync"
 	"text/template"
 )
@@ -30,7 +31,12 @@ func genConfig(h Host, topo Topo) {
 	}
 	defer f.Close()
 
-	err = tp.Execute(f, h)
+	data := struct {
+		Host Host
+		NFS  string
+	}{h, topo.MgmtIp}
+
+	err = tp.Execute(f, data)
 	if err != nil {
 		log.Printf("failed to execute config template for %s - %v", h.Name, err)
 	}
@@ -69,15 +75,20 @@ func Configure(topoName string) {
 }
 
 func runConfig(yml, topo string, h Host, s DomStatus) {
-	log.Printf("configuring %s:%s", topo, h.Name)
+
+	extra_vars := "ansible_become_pass=rvn"
+	if strings.ToLower(h.OS) == "freebsd" {
+		extra_vars += " ansible_python_interpreter='/usr/local/bin/python'"
+	}
+
 	out, err := exec.Command(
 		"ansible-playbook",
 		"-i", s.IP+",",
 		yml,
-		"--extra-vars", "ansible_become_pass=rvn",
+		"--extra-vars", extra_vars,
 		`--ssh-extra-args='-i/var/rvn/ssh/rvn'`,
 		"--user=rvn",
-	).Output()
+	).CombinedOutput()
 
 	if err != nil {
 		log.Printf("failed to run configuration for %s - %v", h.Name, err)

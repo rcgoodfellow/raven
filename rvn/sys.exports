@@ -1,0 +1,2 @@
+{{range .}}{{.Dir}} {{.Subnet}}/24(rw,sync,all_squash)
+{{end -}}

@@ -16,6 +16,7 @@ type Mount struct {
 
 type Host struct {
 	Name   string  `json:"name"`
+	Image  string  `json:"image"`
 	OS     string  `json:"os"`
 	Mounts []Mount `json:"mounts"`
 	Level  int     `json:"level"`
@@ -45,6 +46,7 @@ type Topo struct {
 	Switches []Zwitch `json:"switches"`
 	Links    []Link   `json:"links"`
 	Dir      string   `json:"dir"`
+	MgmtIp   string   `json:"mgmtip"`
 }
 
 func LoadTopo(path string) Topo {
