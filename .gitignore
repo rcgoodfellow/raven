@@ -20,3 +20,4 @@
 *.sw*
 
 runsync.sh
+*.retry
