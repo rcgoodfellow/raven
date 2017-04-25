@@ -34,6 +34,15 @@ func ExportNFS(topo Topo) error {
 		}
 	}
 
+	for _, n := range topo.Switches {
+		for _, m := range n.Mounts {
+			table[m.Source] = &Export{
+				Dir:    m.Source,
+				Subnet: topo.MgmtIp,
+			}
+		}
+	}
+
 	//flatten table in to a list of exports
 	var exports []*Export
 	for _, x := range table {

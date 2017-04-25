@@ -19,3 +19,7 @@ mkdir -p ~/.ssh
 cd ~/.ssh
 wget http://mirror.deterlab.net/rvn/rvn
 wget http://mirror.deterlab.net/rvn/rvn.pub
+
+sudo mkdir -p /usr/local/lib/rvn
+sudo cp run_model.js /usr/local/lib/rvn/
+sudo cp web/public/js/modeling/js /usr/local/lib/rvn/

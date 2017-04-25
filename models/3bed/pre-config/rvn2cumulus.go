@@ -83,7 +83,7 @@ func main() {
 	//load the cumulus interface template file
 	tp_path, err := filepath.Abs("./cumulus-interfaces-template")
 	if err != nil {
-		log.Fatalf("Failed to read template %v", err)
+		log.Fatalf("Failed to create path for template %v", err)
 	}
 	tp, err := template.ParseFiles(tp_path)
 	if err != nil {
@@ -94,7 +94,10 @@ func main() {
 	//to generate the associated cumulus linux configuration
 	for zwitch, ifxs := range configs {
 
-		outpath := fmt.Sprintf("%s-interfaces", zwitch)
+		outpath, err := filepath.Abs(fmt.Sprintf("../config/files/%s/interfaces", zwitch))
+		if err != nil {
+			log.Fatalf("Failed to create path for %s config - %v", zwitch, err)
+		}
 		f, err := os.Create(outpath)
 		if err != nil {
 			log.Fatalf("failed to create output file %s - %v", outpath, err)
@@ -148,10 +151,10 @@ func nodeConfig(switchName, port, who string) Ifx {
 
 	//control net defaults to 2003
 	vlan := "2003"
-	//experiment net defaults to 0
+	//experiment net defaults to 1
 	if strings.Contains(switchName, "spine") ||
 		strings.Contains(switchName, "leaf") {
-		vlan = "0"
+		vlan = "1"
 	}
 	return Ifx{
 		For:  who,

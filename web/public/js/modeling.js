@@ -18,6 +18,22 @@ function mod(n, m) {
 /// Modeling Convinence
 ///
 
+Switch = (name, level, mounts) => ({
+  'name': name,
+  'image': 'cumulus-latest',
+  'os': 'linux',
+  'level': level,
+  'mounts': mounts
+});
+
+Node = (name, level, mounts, image, os) => ({
+  'name': name,
+  'image': image,
+  'os': os,
+  'level': level,
+  'mounts': mounts
+});
+
 //generic nic generator
 Nic = (n, speed, i) => Array(n).fill({'speed': speed, 'nic': i});
 

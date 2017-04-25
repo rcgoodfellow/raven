@@ -2,31 +2,26 @@
  * spine & leaf system
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-Switch = (name, level, mounts) => ({
-  'name': name,
-  'image': 'cumulus-latest',
-  'os': 'linux',
-  'level': level,
-  'mounts': mounts
-});
-
-Node = (name, level, mounts, image, os) => ({
-  'name': name,
-  'image': image,
-  'os': os,
-  'level': level,
-  'mounts': mounts
-});
-
 deter_mount = {
   'source': '/home/ry/deter',
   'point': '/opt/deter'
 };
 
-infra = ['boss', 'users', 'router'];
+configMount = (name) => ({
+  'source': '/home/ry/raven/models/3bed/config/files/'+name,
+  'point': '/tmp/config'
+});
+
+
+infra = [boss, users, router] = 
+  ['boss', 'users', 'router'].map(name => 
+    Node(name, 1, [deter_mount, configMount(name)], 'freebsd-11', 'freebsd') 
+  ) 
+
+
 nodes = [
   ...Range(3).map(i => Node(`n${i}`, 3, [], 'debian-stretch', 'linux')),
-  ...infra.map(n => Node(n, 1, [deter_mount], 'freebsd-11', 'freebsd')),
+  ...infra,
   Node('walrus', 
     2, [{
       'source': '/home/ry/deter/walrustf',
@@ -36,13 +31,14 @@ nodes = [
   )
 ];
 
+
 switches = [
-  Switch('stem', 2, [deter_mount]),
-  Switch('leaf', 4, [deter_mount])
+  Switch('stem', 2, [deter_mount, configMount('stem')]),
+  Switch('leaf', 4, [deter_mount, configMount('leaf')])
 ];
 
 links = [
-  ...Range(3).map(i => Link(`${infra[i]}`, 'eth0', 'stem', `swp${i+1}`)),
+  ...Range(3).map(i => Link(`${infra[i].name}`, 'eth0', 'stem', `swp${i+1}`)),
   ...Range(3).map(i => Link(`n${i}`, 'eth0', 'stem', `swp${i+4}`)),
   ...Range(3).map(i => Link(`n${i}`, 'eth0', 'leaf', `swp${i+1}`)),
   Link('walrus', 'eth0', 'stem', 'swp7'),

@@ -59,7 +59,7 @@ func Configure(topoName string) {
 		log.Printf("running base config for %s:%s", topo.Name, host.Name)
 		runConfig(yml, topo.Name, host, ds)
 
-		user_yml := fmt.Sprintf("%s/%s.yml", topo.Dir, host.Name)
+		user_yml := fmt.Sprintf("%s/config/%s.yml", topo.Dir, host.Name)
 		if _, err := os.Stat(user_yml); err == nil {
 			log.Printf("running user config for %s:%s", topo.Name, host.Name)
 			runConfig(user_yml, topo.Name, host, ds)
@@ -82,7 +82,7 @@ func Configure(topoName string) {
 }
 
 func preConfigure(topo Topo) {
-	pc_script := fmt.Sprintf("%s/pre-config", topo.Dir)
+	pc_script := fmt.Sprintf("%s/pre-config/run", topo.Dir)
 	if _, err := os.Stat(pc_script); err == nil {
 		log.Printf("running pre-config for %s", topo.Name)
 
@@ -90,9 +90,9 @@ func preConfigure(topo Topo) {
 		env := os.Environ()
 		cmd.Env = append(env,
 			fmt.Sprintf("TOPOJSON=%s/%s/%s.json", SysDir(), topo.Name, topo.Name))
-		cmd.Dir = topo.Dir
+		cmd.Dir = fmt.Sprintf("%s/pre-config", topo.Dir)
 		out, err := cmd.CombinedOutput()
-		if err != nil || true {
+		if err != nil {
 			log.Printf("pre-config failed %s - %v", out, err)
 		}
 	}

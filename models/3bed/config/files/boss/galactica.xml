@@ -1,0 +1,11 @@
+<project>
+  <attribute name="name"><value>galactica</value></attribute>
+  <attribute name="why"><value>survival</value></attribute>
+  <attribute name="pid"><value>galactica</value></attribute>
+  <attribute name="URL"><value>http://galactica.mil</value></attribute>
+  <attribute name="funders"><value>Colonial Fleet</value></attribute>
+  <attribute name="org_type"><value></value>Military</attribute>
+  <attribute name="research_type"><value>Space Warfare</value></attribute>
+  <attribute name="public"><value>1</value></attribute>
+  <attribute name="leader"><value>adama</value></attribute>
+</project>

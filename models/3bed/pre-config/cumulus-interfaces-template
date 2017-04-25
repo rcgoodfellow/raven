@@ -15,3 +15,11 @@ iface {{.Name}}
 {{range .BridgeDefs}}{{.}}
 {{end -}}
 {{end}}
+
+auto bridge
+iface bridge
+  bridge-vlan-aware yes
+  bridge-ports {{range .}} {{.Name}}{{end}}
+  bridge-stp off
+  bridge-mcquerier 1
+  bridge-mcsnoop 1
