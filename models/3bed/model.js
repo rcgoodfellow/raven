@@ -2,6 +2,7 @@
  * spine & leaf system
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+// define the mounts we will use later in node definitions
 deter_mount = {
   'source': '/home/ry/deter',
   'point': '/opt/deter'
@@ -13,14 +14,15 @@ configMount = (name) => ({
 });
 
 
+// testbed infrastructure nodes
 infra = [boss, users, router] = 
   ['boss', 'users', 'router'].map(name => 
     Node(name, 1, [deter_mount, configMount(name)], 'freebsd-11', 'freebsd') 
   ) 
 
-
+// all nodes
 nodes = [
-  ...Range(3).map(i => Node(`n${i}`, 3, [], 'debian-stretch', 'linux')),
+  ...Range(3).map(i => Node(`n${i}`, 3, [], 'netboot', 'netboot')),
   ...infra,
   Node('walrus', 
     2, [{

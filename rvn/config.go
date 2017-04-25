@@ -101,6 +101,10 @@ func preConfigure(topo Topo) {
 
 func runConfig(yml, topo string, h Host, s DomStatus) {
 
+	if strings.ToLower(h.OS) == "netboot" {
+		return
+	}
+
 	extra_vars := "ansible_become_pass=rvn"
 	if strings.ToLower(h.OS) == "freebsd" {
 		extra_vars += " ansible_python_interpreter='/usr/local/bin/python'"

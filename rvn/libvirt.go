@@ -372,6 +372,7 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 			Type: &xlibvirt.DomainOSType{Type: "hvm"},
 			BootDevices: []xlibvirt.DomainBootDevice{
 				xlibvirt.DomainBootDevice{Dev: "hd"},
+				xlibvirt.DomainBootDevice{Dev: "network"},
 			},
 		},
 		Memory: &xlibvirt.DomainMemory{Value: 1024, Unit: "MiB"},

@@ -79,7 +79,7 @@
         line: "tftp dgram udp wait  root  /usr/libexec/tftpd  tftpd -l -s /tftpboot"
 
     - name: Create battlestar project
-      command: su elabman /tmp/config/first_project.sh
+      command: su elabman -c "/tmp/config/first_project.sh"
     
     - name: restart inetd
       command: service inetd restart

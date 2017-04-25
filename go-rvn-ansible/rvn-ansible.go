@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/rcgoodfellow/raven/rvn"
 	"log"
@@ -55,19 +56,34 @@ func main() {
 		extra_vars += " ansible_python_interpreter='/usr/local/bin/python'"
 	}
 
-	out, err := exec.Command(
+	cmd := exec.Command(
 		"ansible-playbook",
 		"-i", ds.IP+",",
 		yml,
 		"--extra-vars", extra_vars,
 		`--ssh-extra-args='-i/var/rvn/ssh/rvn'`,
 		"--user=rvn",
-	).CombinedOutput()
+	)
 
+	reader, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Fatalf("ansible failed %s - %v", string(out), err)
-	} else {
-		log.Printf("%s", out)
+		log.Fatalf("failed to get stdout pipe %v", err)
+	}
+	scanner := bufio.NewScanner(reader)
+	go func() {
+		for scanner.Scan() {
+			log.Printf("%s\n", scanner.Text())
+		}
+	}()
+
+	err = cmd.Start()
+	if err != nil {
+		log.Fatalf("failed to start ansible command %v", err)
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		log.Fatal("failed to wait for ansible command to finish %v", err)
 	}
 
 }
