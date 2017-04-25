@@ -146,7 +146,11 @@ func Destroy(topoName string) {
 	}
 	defer conn.Close()
 
-	topo := loadTopo(topoName)
+	topo, err := loadTopo(topoName)
+	if err != nil {
+		log.Printf("destroy: failed to load topo %s", topoName)
+		return
+	}
 	topoDir := SysDir() + "/" + topo.Name
 	exec.Command("rm", "-rf", topoDir).Run()
 
@@ -162,6 +166,7 @@ func Destroy(topoName string) {
 	}
 	destroyNetwork(topo.QualifyName("test"), conn)
 	LoadRuntime().FreeSubnet(topo.Name)
+	UnexportNFS(topoName)
 }
 
 // Launch brings up the system with the given name. This system must exist
@@ -179,7 +184,11 @@ func Launch(topoName string) []string {
 	}
 	defer conn.Close()
 
-	topo := loadTopo(topoName)
+	topo, err := loadTopo(topoName)
+	if err != nil {
+		err := fmt.Errorf("failed to load topo %s - %v", topoName, err)
+		return []string{fmt.Sprintf("%v", err)}
+	}
 
 	//collect all the doamins and networks first so we know everything we need
 	//exists
@@ -266,7 +275,11 @@ func Status(topoName string) map[string]interface{} {
 	}
 	defer conn.Close()
 
-	topo := loadTopo(topoName)
+	topo, err := loadTopo(topoName)
+	if err != nil {
+		log.Printf("status: failed to load topo %s - %v", topoName, err)
+		return status
+	}
 
 	nodes := make(map[string]DomStatus)
 	status["nodes"] = nodes
@@ -409,7 +422,7 @@ func domConnect(net string, dom *xlibvirt.Domain) {
 		})
 }
 
-func loadTopo(name string) Topo {
+func loadTopo(name string) (Topo, error) {
 	topoDir := SysDir() + "/" + name
 	path := topoDir + "/" + name + ".json"
 	return LoadTopo(path)

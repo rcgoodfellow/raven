@@ -49,12 +49,15 @@ type Topo struct {
 	MgmtIp   string   `json:"mgmtip"`
 }
 
-func LoadTopo(path string) Topo {
-	f, _ := ioutil.ReadFile(path)
-	return ReadTopo(f)
+func LoadTopo(path string) (Topo, error) {
+	f, err := ioutil.ReadFile(path)
+	if err != nil {
+		return Topo{}, err
+	}
+	return ReadTopo(f), nil
 }
 
-func LoadTopoByName(system string) Topo {
+func LoadTopoByName(system string) (Topo, error) {
 	path := fmt.Sprintf("%/%/model.json", SysDir(), system)
 	return LoadTopo(path)
 }

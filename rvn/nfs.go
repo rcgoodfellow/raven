@@ -90,6 +90,20 @@ func ExportNFS(topo Topo) error {
 
 func UnexportNFS(topoName string) error {
 
-	return fmt.Errorf("Not implemented")
+	path := fmt.Sprintf("/etc/exports.d/%s.exports", topoName)
+	out, err := exec.Command("rm", "-f", path).CombinedOutput()
+	if err != nil {
+		err = fmt.Errorf("error removing exports file %s - %v", path, err)
+		return err
+	}
+
+	out, err = exec.Command("exportfs", "-ra").CombinedOutput()
+	if err != nil {
+		err = fmt.Errorf("exportfs failed %s - %v", out, err)
+		log.Printf("%v", err)
+		return err
+	}
+
+	return nil
 
 }

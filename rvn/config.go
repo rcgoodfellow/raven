@@ -43,7 +43,11 @@ func genConfig(h Host, topo Topo) {
 }
 
 func Configure(topoName string) {
-	topo := loadTopo(topoName)
+	topo, err := loadTopo(topoName)
+	if err != nil {
+		log.Println("configure: failed to load topo %s - %v", topoName, err)
+		return
+	}
 	status := Status(topo.Name)
 	node_status := status["nodes"].(map[string]DomStatus)
 	switch_status := status["switches"].(map[string]DomStatus)
