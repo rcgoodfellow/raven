@@ -58,7 +58,7 @@ func LoadTopo(path string) (Topo, error) {
 }
 
 func LoadTopoByName(system string) (Topo, error) {
-	path := fmt.Sprintf("%/%/model.json", SysDir(), system)
+	path := fmt.Sprintf("%s/%s/%s.json", SysDir(), system, system)
 	return LoadTopo(path)
 }
 

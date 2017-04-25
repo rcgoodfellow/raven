@@ -43,6 +43,17 @@
       with_items:
         - mkdir -p /etc/ssh/external_keys/rvn
         - cp /usr/home/rvn/.ssh/authorized_keys /etc/ssh/external_keys/rvn
+    
+    - name: Make testbed directory
+      file:
+        path: /usr/testbed
+        state: directory
+
+    - name: Link testbed source
+      file:
+        src: /opt/deter/testbed
+        dest: /usr/testbed/src
+        state: link
 
     - name: Softlink legacy perl location
       file:

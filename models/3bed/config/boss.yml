@@ -64,7 +64,17 @@
       with_items:
         - github.com/fatih/color
         - github.com/soniah/gosnmp
+
+    - name: Make testbed directory
+      file:
+        path: /usr/testbed
+        state: directory
     
+    - name: Link testbed source
+      file:
+        src: /opt/deter/testbed
+        dest: /usr/testbed/src
+        state: link
     
     
     - name: Softlink legacy perl location
