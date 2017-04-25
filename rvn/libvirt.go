@@ -506,6 +506,7 @@ func destroyNetwork(name string, conn *libvirt.Connect) {
 
 func setBridgeProperties(net *libvirt.Network) {
 	allowLLDP(net)
+	allowBOOTP(net)
 }
 
 func allowLLDP(net *libvirt.Network) {
@@ -529,4 +530,24 @@ func allowLLDP(net *libvirt.Network) {
 		)
 		return
 	}
+}
+
+func allowBOOTP(net *libvirt.Network) {
+	name, _ := net.GetName()
+	br, err := net.GetBridgeName()
+	if err != nil {
+		log.Printf("error getting bridge for %s - %v", name, err)
+		return
+	}
+
+	out, err := exec.Command("iptables", "-A", "FORWARD",
+		"-i", br,
+		"-d", "255.255.255.255",
+		"-j", "ACCEPT").CombinedOutput()
+
+	if err != nil {
+		log.Printf("error allowing bootp through iptables %s - %v", out, err)
+		return
+	}
+
 }
