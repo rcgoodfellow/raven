@@ -48,6 +48,7 @@ func Configure(topoName string) {
 		log.Println("configure: failed to load topo %s - %v", topoName, err)
 		return
 	}
+	preConfigure(topo)
 	status := Status(topo.Name)
 	node_status := status["nodes"].(map[string]DomStatus)
 	switch_status := status["switches"].(map[string]DomStatus)
@@ -78,6 +79,24 @@ func Configure(topoName string) {
 	wg.Wait()
 
 	log.Println("configuration of all nodes complete")
+}
+
+func preConfigure(topo Topo) {
+	pc_script := fmt.Sprintf("%s/pre-config", topo.Dir)
+	if _, err := os.Stat(pc_script); err == nil {
+		log.Printf("running pre-config for %s", topo.Name)
+
+		cmd := exec.Command(pc_script)
+		env := os.Environ()
+		cmd.Env = append(env,
+			fmt.Sprintf("TOPOJSON=%s/%s/%s.json", SysDir(), topo.Name, topo.Name))
+		cmd.Dir = topo.Dir
+		out, err := cmd.CombinedOutput()
+		if err != nil || true {
+			log.Printf("pre-config failed %s - %v", out, err)
+		}
+	}
+
 }
 
 func runConfig(yml, topo string, h Host, s DomStatus) {
