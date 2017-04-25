@@ -1,0 +1,17 @@
+source /etc/network/interfaces.d/*.intf
+
+#loopback
+auto lo
+iface lo inet loopback
+
+#management
+auto eth0
+iface eth0 inet dhcp
+
+{{range .}}
+#{{.For}}
+auto {{.Name}}
+iface {{.Name}}
+{{range .BridgeDefs}}{{.}}
+{{end -}}
+{{end}}
