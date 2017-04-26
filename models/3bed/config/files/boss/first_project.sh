@@ -13,4 +13,7 @@ if [ 0 -ne $? ]; then
   ./wap ./newproj /tmp/config/galactica.xml
 fi
 
+mysql tbdb -e "update users set status='active' where uid='adama'"
 mysql tbdb -e "update sitevariables set value=NULL where name='general/firstinit/state'"
+
+#TODO add adama to boss

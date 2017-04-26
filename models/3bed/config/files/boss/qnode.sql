@@ -11,7 +11,7 @@ replace into node_type_attributes values
   ('qnode', 'bootdisk_unit', 0, 'integer'),
   ('qnode', 'cluster', 'vbed3', 'string'),
   ('qnode', 'console', 'com2', 'string'),
-  ('qnode', 'control_interface', 'eth0', 'string'),
+  ('qnode', 'control_interface', 'eth1', 'string'),
   ('qnode', 'control_network', 0, 'integer'),
   ('qnode', 'default_imageid',
     (select osid from os_info where osname='Ubuntu1604-STD'), 'integer'),
@@ -37,3 +37,5 @@ replace into osidtoimageid
   select default_osid as osid, 'qnode' as type, imageid from images 
   where imagename='Ubuntu1604-STD'
 ;
+
+insert into interface_types values(virtio, 10000000, 1, RedHat, Virtio, 1, rj45);
