@@ -30,5 +30,5 @@ replace into switch_stacks (
   stack_id,
   is_primary
   ) values ('leaf', 'Experiment', 1),
-           ('stem', 'Control', 0)
+           ('stem', 'Control', 1)
 ;

@@ -5,15 +5,16 @@ cd /usr/testbed/sbin
 getent passwd adama
 if [ 0 -ne $? ]; then 
   ./wap ./newuser /tmp/config/adama.xml
-fi
-
-getent group galactica
-if [ 0 -ne $? ]; then 
   ./wap ./mkproj galactica
   ./wap ./newproj /tmp/config/galactica.xml
+  mysql tbdb -e "update users set status='active' where uid='adama'"
+  mysql tbdb -e "update sitevariables set value=NULL where name='general/firstinit/state'"
 fi
 
-mysql tbdb -e "update users set status='active' where uid='adama'"
-mysql tbdb -e "update sitevariables set value=NULL where name='general/firstinit/state'"
 
-#TODO add adama to boss
+#TODO add adama to boss?
+#/usr/sbin/pw useradd \
+#  $protouser -u $uid -g $agid \
+#	   -G $Ggid -h - \
+#	   -m -d $HOMEDIR/$protouser -s $binshell \
+#	   -c \"$protouser_name

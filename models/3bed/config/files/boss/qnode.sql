@@ -38,4 +38,4 @@ replace into osidtoimageid
   where imagename='Ubuntu1604-STD'
 ;
 
-insert into interface_types values(virtio, 10000000, 1, RedHat, Virtio, 1, rj45);
+insert into interface_types values('virtio', 10000000, 1, 'RedHat', 'virtio', 1, 'rj45');
