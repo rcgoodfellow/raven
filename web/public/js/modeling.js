@@ -37,13 +37,13 @@ Node = (name, level, mounts, image, os) => ({
 //generic nic generator
 Nic = (n, speed, i) => Array(n).fill({'speed': speed, 'nic': i});
 
-Link = (a, pa, b, pb, speed) => ({
+Link = (a, pa, b, pb, props = {}) => ({
     'endpoints': [
       {'name': a, 'port': pa},
       {'name': b, 'port': pb}
     ],
     'name': `${a}_${pa}-${b}_${pb}`,
-    'capacity': speed
+    'props': props
   }
 );
 

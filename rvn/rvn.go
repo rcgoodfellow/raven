@@ -36,8 +36,9 @@ type Endpoint struct {
 }
 
 type Link struct {
-	Name      string      `json:"name"`
-	Endpoints [2]Endpoint `json:"endpoints"`
+	Name      string                 `json:"name"`
+	Endpoints [2]Endpoint            `json:"endpoints"`
+	Props     map[string]interface{} `json:"props"`
 }
 
 type Topo struct {

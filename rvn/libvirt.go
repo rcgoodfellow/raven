@@ -62,7 +62,7 @@ func Create(topo Topo) {
 		runHooks(d)
 		genConfig(node.Host, topo)
 		doms[node.Name] = d
-		domConnect(topo.QualifyName("test"), d)
+		domConnect(topo.QualifyName("test"), d, nil)
 	}
 
 	for _, zwitch := range topo.Switches {
@@ -70,7 +70,7 @@ func Create(topo Topo) {
 		runHooks(d)
 		genConfig(zwitch.Host, topo)
 		doms[zwitch.Name] = d
-		domConnect(topo.QualifyName("test"), d)
+		domConnect(topo.QualifyName("test"), d, nil)
 	}
 
 	for _, link := range topo.Links {
@@ -81,7 +81,7 @@ func Create(topo Topo) {
 
 		for _, e := range link.Endpoints {
 			d := doms[e.Name]
-			domConnect(topo.QualifyName(link.Name), d)
+			domConnect(topo.QualifyName(link.Name), d, link.Props)
 		}
 
 		nets[link.Name] = n
@@ -106,7 +106,10 @@ func Create(topo Topo) {
 
 		dd, err := conn.LookupDomainByName(d.Name)
 		if err != nil {
-			conn.DomainDefineXML(xml)
+			_, err := conn.DomainDefineXML(xml)
+			if err != nil {
+				log.Printf("error defining domain %v", err)
+			}
 		} else {
 			dd.Destroy()
 			dd.Undefine()
@@ -370,10 +373,10 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 		},
 		OS: &xlibvirt.DomainOS{
 			Type: &xlibvirt.DomainOSType{Type: "hvm"},
-			BootDevices: []xlibvirt.DomainBootDevice{
-				xlibvirt.DomainBootDevice{Dev: "hd"},
-				xlibvirt.DomainBootDevice{Dev: "network"},
-			},
+			//BootDevices: []xlibvirt.DomainBootDevice{
+			//xlibvirt.DomainBootDevice{Dev: "hd"},
+			//xlibvirt.DomainBootDevice{Dev: "network"},
+			//},
 		},
 		Memory: &xlibvirt.DomainMemory{Value: 1024, Unit: "MiB"},
 		Devices: &xlibvirt.DomainDeviceList{
@@ -414,12 +417,29 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 	return d
 }
 
-func domConnect(net string, dom *xlibvirt.Domain) {
+func domConnect(net string, dom *xlibvirt.Domain, props map[string]interface{}) {
+
+	//XXX gross
+	var boot *xlibvirt.DomainInterfaceBoot = nil
+	if !strings.Contains(dom.Name, "leaf") && !strings.Contains(dom.Name, "stem") {
+		if props != nil {
+			boot_order, ok := props["boot"]
+			if ok {
+				boot_order_num, ok := boot_order.(float64)
+				if ok {
+					boot = &xlibvirt.DomainInterfaceBoot{
+						Order: int(boot_order_num),
+					}
+				}
+			}
+		}
+	}
 	dom.Devices.Interfaces = append(dom.Devices.Interfaces,
 		xlibvirt.DomainInterface{
 			Type:   "network",
 			Source: &xlibvirt.DomainInterfaceSource{Network: net},
 			Model:  &xlibvirt.DomainInterfaceModel{Type: "virtio"},
+			Boot:   boot,
 		})
 }
 
