@@ -62,7 +62,7 @@ func Create(topo Topo) {
 		runHooks(d)
 		genConfig(node.Host, topo)
 		doms[node.Name] = d
-		domConnect(topo.QualifyName("test"), d, nil)
+		domConnect(topo.QualifyName("test"), &node.Host, d, nil)
 	}
 
 	for _, zwitch := range topo.Switches {
@@ -70,7 +70,7 @@ func Create(topo Topo) {
 		runHooks(d)
 		genConfig(zwitch.Host, topo)
 		doms[zwitch.Name] = d
-		domConnect(topo.QualifyName("test"), d, nil)
+		domConnect(topo.QualifyName("test"), &zwitch.Host, d, nil)
 	}
 
 	for _, link := range topo.Links {
@@ -81,7 +81,7 @@ func Create(topo Topo) {
 
 		for _, e := range link.Endpoints {
 			d := doms[e.Name]
-			domConnect(topo.QualifyName(link.Name), d, link.Props)
+			domConnect(topo.QualifyName(link.Name), topo.getHost(e.Name), d, link.Props)
 		}
 
 		nets[link.Name] = n
@@ -417,11 +417,10 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 	return d
 }
 
-func domConnect(net string, dom *xlibvirt.Domain, props map[string]interface{}) {
+func domConnect(net string, h *Host, dom *xlibvirt.Domain, props map[string]interface{}) {
 
-	//XXX gross
 	var boot *xlibvirt.DomainInterfaceBoot = nil
-	if !strings.Contains(dom.Name, "leaf") && !strings.Contains(dom.Name, "stem") {
+	if strings.ToLower(h.OS) == "netboot" {
 		if props != nil {
 			boot_order, ok := props["boot"]
 			if ok {

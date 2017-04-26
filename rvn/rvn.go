@@ -50,6 +50,20 @@ type Topo struct {
 	MgmtIp   string   `json:"mgmtip"`
 }
 
+func (t *Topo) getHost(name string) *Host {
+	for i, x := range t.Nodes {
+		if x.Name == name {
+			return &t.Nodes[i].Host
+		}
+	}
+	for i, x := range t.Switches {
+		if x.Name == name {
+			return &t.Switches[i].Host
+		}
+	}
+	return nil
+}
+
 func LoadTopo(path string) (Topo, error) {
 	f, err := ioutil.ReadFile(path)
 	if err != nil {
