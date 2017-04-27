@@ -7,6 +7,7 @@ if [ 0 -ne $? ]; then
   ./wap ./newuser /tmp/config/adama.xml
   ./wap ./mkproj galactica
   ./wap ./newproj /tmp/config/galactica.xml
+  ./wap ./tbacct add adama
   mysql tbdb -e "update users set status='active' where uid='adama'"
   mysql tbdb -e "update sitevariables set value=NULL where name='general/firstinit/state'"
 fi

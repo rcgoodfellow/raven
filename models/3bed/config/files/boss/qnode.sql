@@ -10,7 +10,7 @@ replace into node_type_attributes values
   ('qnode', 'bios_waittime', 10, 'integer'),
   ('qnode', 'bootdisk_unit', 0, 'integer'),
   ('qnode', 'cluster', 'vbed3', 'string'),
-  ('qnode', 'console', 'com2', 'string'),
+  ('qnode', 'console', 'vga', 'string'),
   ('qnode', 'control_interface', 'eth1', 'string'),
   ('qnode', 'control_network', 0, 'integer'),
   ('qnode', 'default_imageid',
@@ -38,4 +38,4 @@ replace into osidtoimageid
   where imagename='Ubuntu1604-STD'
 ;
 
-insert into interface_types values('virtio', 10000000, 1, 'RedHat', 'virtio', 1, 'rj45');
+insert into interface_types values('virtio_net', 10000000, 1, 'RedHat', 'virtio', 1, 'rj45');
