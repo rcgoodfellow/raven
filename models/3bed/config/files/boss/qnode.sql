@@ -19,7 +19,7 @@ replace into node_type_attributes values
   ('qnode', 'diskloadmfs_osid',
     (select osid from os_info where osname='linux-mfs'), 'integer'),
   ('qnode', 'disksize', 100, 'float'),
-  ('qnode', 'disktype', 'ad', 'string'),
+  ('qnode', 'disktype', 'vd', 'string'),
   ('qnode', 'frequency', '1000', 'integer'),
   ('qnode', 'imageable', 1, 'boolean'),
   ('qnode', 'max_interfaces', 2, 'integer'),
