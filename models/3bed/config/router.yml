@@ -17,7 +17,7 @@
         - /etc/rc.d/netif restart vtnet1.2006
         - /etc/rc.d/netif restart vtnet1.2003
         - /etc/rc.d/netif restart vtnet1.2004
-          #- /etc/rc.d/routing restart
+        - /etc/rc.d/routing restart
         - service dhclient restart vtnet0
         # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         # /etc/rc.d/routing restart is a jackass, it clobbers dhcp routes but 
