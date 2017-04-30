@@ -15,15 +15,18 @@ configMount = (name) => ({
 
 
 // testbed infrastructure nodes
-infra = [boss, users, router] = 
-  ['boss', 'users', 'router'].map(name => 
+infra = [boss, users] = 
+  ['boss', 'users'].map(name => 
     Node(name, 1, [deter_mount, configMount(name)], 'freebsd-11', 'freebsd') 
-  ) 
+  );
+
+router = 
+  Node('router', 1, [configMount('router')], 'freebsd-11-router', 'freebsd');
 
 // all nodes
 nodes = [
   ...Range(3).map(i => Node(`n${i}`, 3, [], 'netboot', 'netboot')),
-  ...infra,
+  ...infra, router,
   Node('walrus', 
     2, [{
       'source': '/home/ry/deter/walrustf',
@@ -40,7 +43,8 @@ switches = [
 ];
 
 links = [
-  ...Range(3).map(i => Link(`${infra[i].name}`, 'eth0', 'stem', `swp${i+1}`)),
+  ...Range(2).map(i => Link(`${infra[i].name}`, 'eth0', 'stem', `swp${i+1}`)),
+  Link('router', 'eth0', 'stem', 'swp3'),
   ...Range(3).map(i => Link(`n${i}`, 'eth0', 'stem', `swp${i+4}`, {boot: 1})),
   ...Range(3).map(i => Link(`n${i}`, 'eth0', 'leaf', `swp${i+1}`)),
   Link('walrus', 'eth0', 'stem', 'swp7'),

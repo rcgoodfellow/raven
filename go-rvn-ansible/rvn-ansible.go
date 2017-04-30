@@ -1,5 +1,9 @@
 package main
 
+//FIXME
+//  When there is an ansible syntax error, we just report an exit code 4 and
+//  do not print the ansible diagnostics.
+
 import (
 	"bufio"
 	"fmt"
@@ -83,7 +87,7 @@ func main() {
 
 	err = cmd.Wait()
 	if err != nil {
-		log.Fatal("failed to wait for ansible command to finish %v", err)
+		log.Fatalf("failed to wait for ansible command to finish %v", err)
 	}
 
 }

@@ -51,4 +51,6 @@
         src: /opt/deter/linux-mfs/rootfs.cpio
         remote_src: True
 
+    - name: update mfs keys
+      command:  /tmp/config/update-mfs-keys.sh
 

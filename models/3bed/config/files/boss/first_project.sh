@@ -3,7 +3,7 @@
 cd /usr/testbed/sbin
 
 getent passwd adama
-if [ 0 -ne $? ]; then 
+if [ 0 -ne "$?" ]; then 
   ./wap ./newuser /tmp/config/adama.xml
   ./wap ./mkproj galactica
   ./wap ./newproj /tmp/config/galactica.xml

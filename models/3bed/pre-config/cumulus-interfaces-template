@@ -27,7 +27,7 @@ iface bridge
 auto bridge.2004
 vlan bridge.2004
   alias CONTROLHW
-  bridge-igmp-querier-src 192.168.254.1
+  bridge-igmp-querier-src 192.168.254.254
 
 #add switch to HWCONTROL with static route to boss
 auto vlan2004

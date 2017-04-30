@@ -24,13 +24,13 @@
 
     - name: make dnet dir
       file:
-        path: /home/rvn/.go/src/github.com/deter-project/switch-drivers
+        path: /root/.go/src/github.com/deter-project/switch-drivers
         state: directory
 
     - name: setup link dnet
       file:
         src: /opt/deter/switch-drivers/snmp
-        dest: /home/rvn/.go/src/github.com/deter-project/switch-drivers/snmp
+        dest: /root/.go/src/github.com/deter-project/switch-drivers/snmp
         state: link
     
     - name: install software
@@ -45,12 +45,12 @@
 
     - name: make sure bashrc exists
       file:
-        path: /home/rvn/.bashrc
+        path: /root/.bashrc
         state: touch
     
     - name: configure go paths
       lineinfile:
-        dest: /home/rvn/.bashrc
+        dest: /root/.bashrc
         line: "{{ item }}"
       with_items:
         - "export PATH=~/scripts:$PATH"
@@ -60,7 +60,7 @@
     - name: install go dependencies
       shell: go get {{ item }}
       environment:
-        GOPATH: /home/rvn/.go
+        GOPATH: /root/.go
       with_items:
         - github.com/fatih/color
         - github.com/soniah/gosnmp

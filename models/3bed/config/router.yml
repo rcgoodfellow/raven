@@ -17,7 +17,7 @@
         - /etc/rc.d/netif restart vtnet1.2006
         - /etc/rc.d/netif restart vtnet1.2003
         - /etc/rc.d/netif restart vtnet1.2004
-        - /etc/rc.d/routing restart
+          #- /etc/rc.d/routing restart
         - service dhclient restart vtnet0
         # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         # /etc/rc.d/routing restart is a jackass, it clobbers dhcp routes but 
@@ -25,5 +25,20 @@
         # get them back ourselves
 
     - name: Start dhcp relay
-      command: /usr/local/sbin/dhcrelay -i vtnet1.2003 -i vtnet1.2006 192.168.252.1
+      #command: /usr/local/sbin/dhcrelay -i vtnet1.2003 -i vtnet1.2006 192.168.252.1
+      command: service isc-dhcrelay restart
       ignore_errors: yes
+    
+    #TODO placeholder for installing packages, anything that goes here should
+    #     be ploped into package-build
+    #
+    - name: Install requirements
+      command: pkg install -y {{ item }}
+      with_items:
+        - mrouted
+    
+    - name: start mrouted
+      command: service mrouted restart
+
+
+

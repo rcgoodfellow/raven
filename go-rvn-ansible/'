@@ -111,31 +111,12 @@
       command: tar czf topomap.gz topomap
       args:
         chdir: /proj/emulab-ops/exp/reloading/tbdata
-    
-    - name: Copy topomap to hwdown
-      copy:
-        src: /tmp/config/topomap
-        dest: /proj/emulab-ops/exp/hwdown/tbdata/topomap
-        remote_src: true
-    
-    - name: Tar hwdown/topomap
-      command: tar czf topomap.gz topomap
-      args:
-        chdir: /proj/emulab-ops/exp/hwdown/tbdata
 
     - name: build lldp-switchmac
-      shell: go build lldp-switchmac.go
+      shell: go build
       environment:
         GOPATH: /root/.go
       args:
         chdir: /opt/deter/switch-drivers/snmp/apps
-
-    - name: install lldp-switchmac
-      copy:
-        src: /opt/deter/switch-drivers/snmp/apps/lldp-switchmac
-        dest: /usr/testbed/sbin/lldp-switchmac
-        mode: "a+x"
-        remote_src: true
-
     
 
