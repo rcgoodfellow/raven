@@ -1,5 +1,12 @@
 #!/bin/sh
 
+curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
+
+sudo apt-get install -y \
+         git \
+         golang \
+         libvirt 
+
 #set up directories
 sudo mkdir -p /var/rvn/img
 sudo touch /var/rvn/run
@@ -22,4 +29,4 @@ wget http://mirror.deterlab.net/rvn/rvn.pub
 
 sudo mkdir -p /usr/local/lib/rvn
 sudo cp run_model.js /usr/local/lib/rvn/
-sudo cp web/public/js/modeling/js /usr/local/lib/rvn/
+sudo cp web/public/js/modeling.js /usr/local/lib/rvn/

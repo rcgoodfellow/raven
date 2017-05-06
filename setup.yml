@@ -1,0 +1,90 @@
+---
+- hosts: localhost
+  become: true
+
+  tasks:
+
+    - name: fetch nodejs repo setup script
+      get_url:
+        url: https://deb.nodesource.com/setup_6.x
+        dest: /tmp/nodesetup
+        mode: "a+x"
+
+    - name: install nodejs repo
+      shell: /tmp/nodesetup
+
+    - name: install software
+      apt: name={{item}} state=latest update_cache=yes
+      with_items:
+        - build-essential
+        - git
+        - golang
+        - libvirt-dev
+        - libvirt-bin
+        - nodejs
+
+    - name: set up filesystem
+      file: path={{item.path}} state={{item.state}}
+      with_items:
+        - {path: /var/rvn/img, state: directory}
+        - {path: /var/rvn/run, state: touch}
+        - {path: /var/rvn/ssh, state: directory}
+        - {path: /usr/local/lib/rvn, state: directory}
+        - {path: /root/.ssh, state: directory}
+        - {path: /root/.go, state: directory}
+        - {path: /root/.go/src/github.com/rcgoodfellow, state: directory}
+
+    - name: fetch base images
+      get_url:
+        url: http://mirror.deterlab.net/rvn/{{item}}
+        dest: /var/rvn/img/{{item}}
+      with_items:
+        - cumulus-latest.qcow2
+        - debian-stretch.qcow2
+        - freebsd-11-router.qcow2
+        - freebsd-11.qcow2
+
+    - name: install ssh keys
+      get_url:
+        url: http://mirror.deterlab.net/rvn/{{item}}
+        dest: /var/rvn/ssh/{{item}}
+      with_items:
+        - rvn
+        - rvn.pub
+
+    - name: install javascript libraries
+      copy: src={{item.src}} dest=/usr/local/lib/rvn/{{item.dest}}
+      with_items:
+        - {src: run_model.js, dest: run_model.js}
+        - {src: web/public/js/modeling.js, dest: modeling.js}
+
+    - name: add raven keys to root
+      copy: src=/var/rvn/ssh/{{item}} dest=/root/.ssh/{{item}}
+      with_items:
+        - rvn
+        - rvn.pub
+
+    - name: set up gopath
+      lineinfile:
+        dest: /root/.bashrc
+        line: "{{item}}"
+      with_items:
+        - export GOPATH=/root/.go
+        - PATH=$GOPATH/bin:$PATH
+
+
+    - name: install go libraries
+      shell: go get {{item}}
+      environment:
+        GOPATH: /root/.go
+      with_items:
+        - github.com/libvirt/libvirt-go
+        - github.com/libvirt/libvirt-go-xml
+        - github.com/revel/cmd/revel
+
+    - name: link raven dir into gopath
+      file:
+        src: "{{playbook_dir}}"
+        dest: /root/.go/src/github.com/rcgoodfellow/raven
+        state: link
+
