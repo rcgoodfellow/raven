@@ -22,6 +22,9 @@
         - libvirt-dev
         - libvirt-bin
         - nodejs
+        - qemu-kvm
+        - qemu-utils
+        - nfs-kernel-server
 
     - name: set up filesystem
       file: path={{item.path}} state={{item.state}}
@@ -43,6 +46,9 @@
         - debian-stretch.qcow2
         - freebsd-11-router.qcow2
         - freebsd-11.qcow2
+
+    - name: create netboot base image
+      command: qemu-img create /var/rvn/img/netboot.qcow2 25G
 
     - name: install ssh keys
       get_url:
@@ -71,6 +77,9 @@
       with_items:
         - export GOPATH=/root/.go
         - PATH=$GOPATH/bin:$PATH
+
+    - name: init runtime file
+      shell: echo "{}" > /var/rvn/run
 
 
     - name: install go libraries
