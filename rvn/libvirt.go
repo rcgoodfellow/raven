@@ -412,7 +412,7 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 		},
 	}
 
-	mountDirs(h, d)
+	//mountDirs(h, d)
 
 	return d
 }

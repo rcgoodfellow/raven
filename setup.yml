@@ -13,6 +13,18 @@
     - name: install nodejs repo
       shell: /tmp/nodesetup
 
+    - name: compute ubuntu libvirt package name
+      set_fact:
+        libvirtd_package: libvirt-bin
+        libvirtd: libvirt-bin
+      when: ansible_distribution == "Ubuntu"
+
+    - name: compute debian libvirt package name
+      set_fact:
+        libvirtd_package: libvirt-daemon
+        libvirtd: libvirtd
+      when: ansible_distribution == "Debian"
+
     - name: install software
       apt: name={{item}} state=latest update_cache=yes
       with_items:
@@ -20,7 +32,7 @@
         - git
         - golang
         - libvirt-dev
-        - libvirt-bin
+        - "{{libvirtd_package}}"
         - nodejs
         - qemu-kvm
         - qemu-utils
@@ -81,6 +93,18 @@
     - name: init runtime file
       shell: echo "{}" > /var/rvn/run
 
+    - name: configure libvirt
+      lineinfile:
+        dest: /etc/libvirt/qemu.conf
+        line: "{{item}}"
+      with_items:
+        - user = "root"
+        - security_driver = "none"
+
+    - name: restart libvirt
+      service:
+        name: "{{libvirtd}}"
+        state: restarted
 
     - name: install go libraries
       shell: go get {{item}}
