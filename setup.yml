@@ -69,6 +69,11 @@
       with_items:
         - rvn
         - rvn.pub
+    
+    - name: set private key permissions
+      file:
+        path: /var/rvn/ssh/rvn
+        mode: 0600
 
     - name: install javascript libraries
       copy: src={{item.src}} dest=/usr/local/lib/rvn/{{item.dest}}
@@ -77,10 +82,11 @@
         - {src: web/public/js/modeling.js, dest: modeling.js}
 
     - name: add raven keys to root
-      copy: src=/var/rvn/ssh/{{item}} dest=/root/.ssh/{{item}}
+      copy: src=/var/rvn/ssh/{{item}} dest=/root/.ssh/{{item}} remote_src=true
       with_items:
         - rvn
         - rvn.pub
+    
 
     - name: set up gopath
       lineinfile:
@@ -120,4 +126,30 @@
         src: "{{playbook_dir}}"
         dest: /root/.go/src/github.com/rcgoodfellow/raven
         state: link
+    
+    - name: build utility programs
+      shell: go build
+      args:
+        chdir: /root/.go/src/github.com/rcgoodfellow/raven/{{item}}
+      environment:
+        GOPATH: /root/.go
+      with_items:
+        - go-rvn-ssh
+        - go-rvn-ansible
 
+    - name: install rvn-ssh
+      copy:
+        src: /root/.go/src/github.com/rcgoodfellow/raven/go-rvn-ssh/{{item}}
+        dest: /usr/local/bin/{{item}}
+        remote_src: true
+        mode: "a+x"
+      with_items:
+        - rvn-ssh
+        - go-rvn-ssh
+
+    - name: install rvn-ansible
+      copy:
+        src: /root/.go/src/github.com/rcgoodfellow/raven/go-rvn-ansible/go-rvn-ansible
+        dest: /usr/local/bin/rvn-ansible
+        remote_src: true
+        mode: "a+x"
