@@ -21,7 +21,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("ssh -i /var/rvn/ssh/rvn rvn@%s\n", ds.IP)
+	fmt.Printf("ssh -o StrictHostKeyChecking=no -i /var/rvn/ssh/rvn rvn@%s\n", ds.IP)
 
 }
 

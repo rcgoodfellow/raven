@@ -110,14 +110,16 @@ func runConfig(yml, topo string, h Host, s DomStatus) {
 		extra_vars += " ansible_python_interpreter='/usr/local/bin/python'"
 	}
 
-	out, err := exec.Command(
+	cmd := exec.Command(
 		"ansible-playbook",
 		"-i", s.IP+",",
 		yml,
 		"--extra-vars", extra_vars,
 		`--ssh-extra-args='-i/var/rvn/ssh/rvn'`,
 		"--user=rvn",
-	).CombinedOutput()
+	)
+    cmd.Env = append(os.Environ(), "ANSIBLE_HOST_KEY_CHECKING=False")
+    out, err := cmd.CombinedOutput()
 
 	if err != nil {
 		log.Printf("failed to run configuration for %s - %v", h.Name, err)

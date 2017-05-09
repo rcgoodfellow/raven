@@ -68,6 +68,7 @@ func main() {
 		`--ssh-extra-args='-i/var/rvn/ssh/rvn'`,
 		"--user=rvn",
 	)
+	cmd.Env = append(os.Environ(), "ANSIBLE_HOST_KEY_CHECKING=False")
 
 	reader, err := cmd.StdoutPipe()
 	if err != nil {
