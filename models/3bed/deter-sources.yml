@@ -1,0 +1,30 @@
+---
+- hosts: localhost
+  become: true
+
+  tasks:
+
+    - file: path=dev/deter state=directory
+    - git: 
+        repo: "{{item.repo}}" 
+        dest: "{{item.dest}}" 
+        version: "{{item.version}}"
+        accept_hostkey: True 
+        key_file: /users/rgoodfel/.ssh/id_rsa
+      with_items:
+        - { repo: 'git@github.com:deter-project/testbed.git',   
+            dest: '/opt/deter/testbed',
+            version: 'hotfix' }
+        - { repo: 'git@github.com:deter-project/deterboot.git', 
+            dest: '/opt/deter/deterboot',
+            version: 'master' }
+        - { repo: 'git@github.com:deter-project/linux-mfs.git', 
+            dest: '/opt/deter/linux-mfs',
+            version: 'master' }
+        - { repo: 'git@github.com:deter-project/switch-drivers.git', 
+            dest: '/opt/deter/switch-drivers',
+            version: 'master' }
+        - { repo: 'git@github.com:rcgoodfellow/walrustf.git', 
+            dest: '/opt/walrustf',
+            version: 'master' }
+
