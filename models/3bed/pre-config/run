@@ -2,5 +2,5 @@
 
 set -x
 
-./rvn2cumulus $TOPOJSON
+GOPATH=/root/.go go run rvn2cumulus.go $TOPOJSON
 

@@ -86,7 +86,6 @@
       with_items:
         - rvn
         - rvn.pub
-    
 
     - name: set up gopath
       lineinfile:
@@ -137,13 +136,6 @@
         - go-rvn-ssh
         - go-rvn-ansible
     
-    - name: build rvn2cumulus
-      shell: go build rvn2cumulus.go
-      args:
-        chdir: /root/.go/src/github.com/rcgoodfellow/raven/models/3bed/pre-config
-      environment:
-        GOPATH: /root/.go
-
     - name: install rvn-ssh
       copy:
         src: /root/.go/src/github.com/rcgoodfellow/raven/go-rvn-ssh/{{item}}
