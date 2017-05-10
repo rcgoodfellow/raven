@@ -1,6 +1,6 @@
 ---
 - hosts: localhost
-  become: false
+  become: true
 
   tasks:
 
@@ -27,4 +27,6 @@
         - { repo: 'git@github.com:rcgoodfellow/walrustf.git', 
             dest: '/space/walrustf',
             version: 'master' }
+
+    - command: chmod g+w true -R /space
 
