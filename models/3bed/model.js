@@ -2,14 +2,22 @@
  * spine & leaf system
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+// setup directories, MODIFY THIS FOR YOUR ENVIRONMENT
+dev = '/opt',
+dirs = {
+  deter:  dev + '/deter',
+  walrus: dev + '/walrustf',
+  raven:  dev + '/raven',
+}
+
 // define the mounts we will use later in node definitions
 deter_mount = {
-  'source': '/home/ry/deter',
+  'source': dirs.deter,
   'point': '/opt/deter'
 };
 
 configMount = (name) => ({
-  'source': '/home/ry/raven/models/3bed/config/files/'+name,
+  'source': dirs.raven + '/models/3bed/config/files/' +name,
   'point': '/tmp/config'
 });
 
@@ -29,7 +37,7 @@ nodes = [
   ...infra, router,
   Node('walrus', 
     2, [{
-      'source': '/home/ry/deter/walrustf',
+      'source': dirs.walrus,
       'point': '/opt/walrus'
     }],
     'debian-stretch', 'linux'

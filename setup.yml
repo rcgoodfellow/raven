@@ -136,6 +136,13 @@
       with_items:
         - go-rvn-ssh
         - go-rvn-ansible
+    
+    - name: build rvn2cumulus
+      shell: go build rvn2cumulus.go
+      args:
+        chdir: /root/.go/src/github.com/rcgoodfellow/raven/models/3bed/pre-config
+      environment:
+        GOPATH: /root/.go
 
     - name: install rvn-ssh
       copy:
