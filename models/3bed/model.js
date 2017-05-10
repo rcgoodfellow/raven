@@ -3,7 +3,7 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 // setup directories, MODIFY THIS FOR YOUR ENVIRONMENT
-dev = '/opt',
+dev = '/space',
 dirs = {
   deter:  dev + '/deter',
   walrus: dev + '/walrustf',

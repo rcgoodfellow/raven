@@ -13,18 +13,18 @@
         key_file: /users/rgoodfel/.ssh/id_rsa
       with_items:
         - { repo: 'git@github.com:deter-project/testbed.git',   
-            dest: '/opt/deter/testbed',
+            dest: '/space/deter/testbed',
             version: 'hotfix' }
         - { repo: 'git@github.com:deter-project/deterboot.git', 
-            dest: '/opt/deter/deterboot',
+            dest: '/space/deter/deterboot',
             version: 'master' }
         - { repo: 'git@github.com:deter-project/linux-mfs.git', 
-            dest: '/opt/deter/linux-mfs',
+            dest: '/space/deter/linux-mfs',
             version: 'master' }
         - { repo: 'git@github.com:deter-project/switch-drivers.git', 
-            dest: '/opt/deter/switch-drivers',
+            dest: '/space/deter/switch-drivers',
             version: 'master' }
         - { repo: 'git@github.com:rcgoodfellow/walrustf.git', 
-            dest: '/opt/walrustf',
+            dest: '/space/walrustf',
             version: 'master' }
 
