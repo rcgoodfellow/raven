@@ -60,3 +60,9 @@
         src: /usr/local/bin/perl
         dest: /usr/bin/perl
         state: link
+
+    - name: Start lldpd
+      service:
+        name: lldpd
+        state: restarted
+

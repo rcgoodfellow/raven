@@ -1,2 +1,2 @@
-{{range .}}{{.Dir}} {{.Subnet}}/24(rw,sync,all_squash,no_subtree_check,insecure,anonuid=1000,anongid=1000)
+{{range .}}{{.Dir}} {{.Subnet}}/24(rw,sync,no_root_squash,no_subtree_check,insecure,anonuid=1000,anongid=1000)
 {{end -}}

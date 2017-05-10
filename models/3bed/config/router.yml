@@ -36,9 +36,14 @@
       command: pkg install -y {{ item }}
       with_items:
         - mrouted
+        - lldpd
     
     - name: start mrouted
       command: service mrouted restart
 
+    - name: Start lldpd
+      service:
+        name: lldpd
+        state: restarted
 
 
