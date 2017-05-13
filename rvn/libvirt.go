@@ -323,28 +323,6 @@ func DomainStatus(name string) (DomStatus, error) {
  *
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-func mountDirs(h *Host, d *xlibvirt.Domain) {
-	for i, mount := range h.Mounts {
-		tag := d.Name + strings.Replace(mount.Point, "/", "-", -1)
-		h.Mounts[i].Tag = tag
-		d.Devices.Filesystems = append(d.Devices.Filesystems,
-			xlibvirt.DomainFilesystem{
-				Type:       "mount",
-				AccessMode: "mapped",
-				Driver: &xlibvirt.DomainFilesystemDriver{
-					Type:     "path",
-					WRPolicy: "immediate",
-				},
-				Source: &xlibvirt.DomainFilesystemSource{
-					Dir: mount.Source,
-				},
-				Target: &xlibvirt.DomainFilesystemTarget{
-					Dir: tag,
-				},
-			})
-	}
-}
-
 func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 
 	baseImage := "/var/rvn/img/" + h.Image + ".qcow2"
@@ -373,10 +351,6 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 		},
 		OS: &xlibvirt.DomainOS{
 			Type: &xlibvirt.DomainOSType{Type: "hvm"},
-			//BootDevices: []xlibvirt.DomainBootDevice{
-			//xlibvirt.DomainBootDevice{Dev: "hd"},
-			//xlibvirt.DomainBootDevice{Dev: "network"},
-			//},
 		},
 		Memory: &xlibvirt.DomainMemory{Value: 1024, Unit: "MiB"},
 		Devices: &xlibvirt.DomainDeviceList{
@@ -411,8 +385,6 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 			},
 		},
 	}
-
-	//mountDirs(h, d)
 
 	return d
 }

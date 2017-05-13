@@ -1,0 +1,46 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+
+    - apt: name={{item}} state=latest update_cache=yes
+      with_items:
+        - vim
+        - golang
+        - bash-completion
+        - git
+        - build-essential
+
+    - copy: src={{item.src}} dest={{item.dest}} remote_src=True
+      with_items:
+        - { src: '/tmp/config/interfaces', dest: '/etc/network/interfaces' }
+        - { src: '/tmp/config/snmpd.conf', dest: '/etc/snmp/snmpd.conf' }
+        - { src: '/tmp/config/lldpd.conf', dest: '/etc/lldpd.d/lldpd.conf' }
+        - { src: '/tmp/config/lldpd_default', dest: '/etc/default/lldpd' }
+
+    - file:
+        path: /root/.go/src/github.com/rcgoodfellow
+        state: directory
+
+    - file:
+        src: "/opt/{{item}}"
+        dest: "/root/.go/src/github.com/rcgoodfellow/{{item}}"
+        state: link
+      with_items:
+        - agx
+        - netlink
+
+    - lineinfile:
+        line: export GOPATH=/root/.go
+        path: /root/.bashrc
+    
+    - shell: go get {{item}}
+      environment:
+        GOPATH: /root/.go
+      with_items:
+        - github.com/vishvananda/netlink/nl
+
+    - service:
+        name: snmpd
+        state: restarted
