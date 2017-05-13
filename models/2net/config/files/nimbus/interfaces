@@ -1,0 +1,21 @@
+source /etc/network/interfaces.d/*.intf
+
+#loopback
+auto lo
+iface lo inet loopback
+
+#management
+auto eth0
+iface eth0 inet dhcp
+
+auto swp1
+iface swp1
+
+auto swp2
+iface swp2
+
+auto bridge
+iface bridge
+  bridge-vlan-aware yes
+  bridge-ports swp1 swp2
+  bridge-stp off

@@ -10,7 +10,7 @@
         dest: "{{item.dest}}" 
         version: "{{item.version}}"
         accept_hostkey: True 
-        key_file: /users/rgoodfel/.ssh/id_rsa
+        key_file: "{{git_key}}"
       with_items:
         - { repo: 'git@github.com:deter-project/testbed.git',   
             dest: '/space/deter/testbed',
@@ -28,5 +28,5 @@
             dest: '/space/walrustf',
             version: 'master' }
 
-    - command: chmod g+w true -R /space
+    - command: chmod g+w -R /space
 

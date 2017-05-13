@@ -11,7 +11,6 @@ import (
 type Mount struct {
 	Point  string `json:"point"`
 	Source string `json:"source"`
-	Tag    string `json:"tag"`
 }
 
 type Host struct {
