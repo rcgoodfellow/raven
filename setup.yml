@@ -6,7 +6,7 @@
 
     - name: fetch nodejs repo setup script
       get_url:
-        url: https://deb.nodesource.com/setup_6.x
+        url: https://deb.nodesource.com/setup_7.x
         dest: /tmp/nodesetup
         mode: "a+x"
 

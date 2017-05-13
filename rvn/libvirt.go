@@ -351,17 +351,18 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 	instanceImage := SysDir() + "/" + t.Name + "/" + h.Name + ".qcow2"
 	exec.Command("rm", "-f", instanceImage).Run()
 
-	err := exec.Command(
+	out, err := exec.Command(
 		"qemu-img",
 		"create",
 		"-f",
 		"qcow2",
 		"-o", "backing_file="+baseImage,
-		instanceImage).Run()
+		instanceImage).CombinedOutput()
 
 	if err != nil {
 		log.Printf("error creating image file for %s", h.Name)
-		log.Printf("%s", err)
+		log.Printf("%v", err)
+		log.Printf("%s", out)
 	}
 
 	d := &xlibvirt.Domain{
