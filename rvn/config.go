@@ -11,7 +11,16 @@ import (
 	"text/template"
 )
 
-func genConfig(h Host, topo Topo) {
+func GenConfigAll(topo Topo) {
+	for _, node := range topo.Nodes {
+		GenConfig(node.Host, topo)
+	}
+	for _, zwitch := range topo.Switches {
+		GenConfig(zwitch.Host, topo)
+	}
+}
+
+func GenConfig(h Host, topo Topo) {
 	tp_path, err := filepath.Abs("../rvn/config.yml")
 	if err != nil {
 		log.Printf("failed to create absolute path for config.yml - %v", err)
@@ -42,7 +51,7 @@ func genConfig(h Host, topo Topo) {
 	}
 }
 
-func Configure(topoName string) {
+func Configure(topoName string, withUserConfig bool) {
 	topo, err := loadTopo(topoName)
 	if err != nil {
 		log.Println("configure: failed to load topo %s - %v", topoName, err)
@@ -61,8 +70,10 @@ func Configure(topoName string) {
 
 		user_yml := fmt.Sprintf("%s/config/%s.yml", topo.Dir, host.Name)
 		if _, err := os.Stat(user_yml); err == nil {
-			log.Printf("running user config for %s:%s", topo.Name, host.Name)
-			runConfig(user_yml, topo.Name, host, ds)
+			if withUserConfig {
+				log.Printf("running user config for %s:%s", topo.Name, host.Name)
+				runConfig(user_yml, topo.Name, host, ds)
+			}
 		}
 		wg.Done()
 	}
@@ -118,8 +129,8 @@ func runConfig(yml, topo string, h Host, s DomStatus) {
 		`--ssh-extra-args='-i/var/rvn/ssh/rvn'`,
 		"--user=rvn",
 	)
-    cmd.Env = append(os.Environ(), "ANSIBLE_HOST_KEY_CHECKING=False")
-    out, err := cmd.CombinedOutput()
+	cmd.Env = append(os.Environ(), "ANSIBLE_HOST_KEY_CHECKING=False")
+	out, err := cmd.CombinedOutput()
 
 	if err != nil {
 		log.Printf("failed to run configuration for %s - %v", h.Name, err)

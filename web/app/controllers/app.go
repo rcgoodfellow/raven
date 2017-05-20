@@ -67,6 +67,20 @@ func (c App) Push() revel.Result {
 	return c.RenderText("ok")
 }
 
+func (c App) Mount() revel.Result {
+	var topo rvn.Topo
+	body, _ := ioutil.ReadAll(c.Request.Body)
+	if len(body) == 0 {
+		c.Response.Status = 400
+		return c.RenderText("bad argument")
+	}
+	json.Unmarshal(body, &topo)
+	rvn.ExportNFS(topo)
+	rvn.GenConfigAll(topo)
+	c.Response.Status = 200
+	return c.RenderText("ok")
+}
+
 func (c App) Status() revel.Result {
 	topo := c.Params.Query.Get("topo")
 	log.Printf("status: topo=%s", topo)
@@ -118,7 +132,7 @@ func (c App) Configure() revel.Result {
 		return c.RenderText("bad argument")
 	}
 
-	rvn.Configure(topo)
+	rvn.Configure(topo, true)
 	c.Response.Status = 200
 	return c.RenderText("ok")
 }

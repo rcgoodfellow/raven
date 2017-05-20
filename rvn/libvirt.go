@@ -60,7 +60,7 @@ func Create(topo Topo) {
 	for _, node := range topo.Nodes {
 		d := newDom(&node.Host, &topo)
 		runHooks(d)
-		genConfig(node.Host, topo)
+		GenConfig(node.Host, topo)
 		doms[node.Name] = d
 		domConnect(topo.QualifyName("test"), &node.Host, d, nil)
 	}
@@ -68,7 +68,7 @@ func Create(topo Topo) {
 	for _, zwitch := range topo.Switches {
 		d := newDom(&zwitch.Host, &topo)
 		runHooks(d)
-		genConfig(zwitch.Host, topo)
+		GenConfig(zwitch.Host, topo)
 		doms[zwitch.Name] = d
 		domConnect(topo.QualifyName("test"), &zwitch.Host, d, nil)
 	}
@@ -302,6 +302,11 @@ func Status(topoName string) map[string]interface{} {
 
 	for _, x := range topo.Links {
 		links[x.Name] = networkStatus(topo.QualifyName(x.Name), conn)
+	}
+
+	subnet, ok := LoadRuntime().SubnetReverseTable[topoName]
+	if ok {
+		status["mgmtip"] = fmt.Sprintf("172.22.%d.1", subnet)
 	}
 	return status
 }

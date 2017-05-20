@@ -10,6 +10,7 @@ zwitch = {
   'mounts': [
     { 'source': '/space/agx',                     'point': '/opt/agx' },
     { 'source': '/space/netlink',                 'point': '/opt/netlink' },
+    { 'source': '/space/switch-drivers',          'point': '/opt/switch-drivers'},
     { 'source': workspace+'/config/files/nimbus', 'point': '/tmp/config' }
   ]
 };

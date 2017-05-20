@@ -107,13 +107,27 @@ function push() {
   }
 }
 
+function mount() {
+  console.log('mount');
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/rvn-mount');
+  xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+  xhr.send(JSON.stringify(rspace));
+  xhr.onloadend = function() {
+    console.log('mount request completed');
+  }
+}
+
+
 function status() {
   console.log('status');
   $.get("/rvn-status?topo="+rspace.name, function(data) {
     console.log(data);
-    status_ = data;
     var xi = document.getElementById('tb-info');
     xi.innerHTML = '<pre>'+JSON.stringify(data, null, 2)+'</pre>';
+    if('mgmtip' in data) {
+      rspace['mgmtip'] = data['mgmtip'];
+    }
   });
 }
 
