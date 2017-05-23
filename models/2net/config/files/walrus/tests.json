@@ -1,0 +1,27 @@
+[    
+  {
+    "launch": "ansible-playbook test.yml --tags \"vpath-create\"",
+    "name": "vpath-create",
+    "timeout": 10,
+    "success": [
+      {"status": "ok", "who": "n0", "message": "ping-success"},
+      {"status": "ok", "who": "n1", "message": "ping-success"}
+    ],
+    "fail": [
+      {"status": "error", "who": "*", "message": "*"}
+    ]
+  },
+  {
+    "launch": "ansible-playbook test.yml --tags \"vpath-destroy\"",
+    "name": "vpath-destroy",
+    "timeout": 10,
+    "success": [
+      {"status": "warning", "who": "n0", "message": "ping-fail"},
+      {"status": "warning", "who": "n1", "message": "ping-fail"}
+    ],
+    "fail": [
+      {"status": "error", "who": "*", "message": "*"}
+    ]
+  }
+]
+

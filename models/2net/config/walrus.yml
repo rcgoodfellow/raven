@@ -1,0 +1,56 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+
+    - name: install software
+      apt: name={{item}} state=latest update_cache=yes
+      with_items:
+        - lldpd
+        - redis-server
+        - python3-pip
+        - bash-completion
+        - git
+        - vim
+        - tmux
+        - golang
+    
+    - name: Set redis listening address
+      lineinfile:
+        name: /etc/redis/redis.conf
+        regexp: "^bind *"
+        line: "bind 0.0.0.0"
+
+    - name: Restart redis
+      command: service redis restart
+
+    - name: Install redis-python
+      command: pip3 install redis
+
+    - file:
+        path: /home/rvn/.go/src/github.com/rcgoodfellow
+        state: directory
+        owner: rvn
+        group: rvn
+
+    - file:
+        src: /opt/walrus
+        dest: /home/rvn/.go/src/github.com/rcgoodfellow/walrustf
+        state: link
+        owner: rvn
+        group: rvn
+    
+    - lineinfile:
+        line: "{{ item }}"
+        path: /home/rvn/.bashrc
+      with_items:
+        - export GOPATH=/home/rvn/.go
+        - export PATH=/home/rvn/.go/bin:$PATH
+    
+    - shell: go get {{item}}
+      environment:
+        GOPATH: /home/rvn/.go
+      with_items:
+        - github.com/fatih/color
+        - github.com/garyburd/redigo/redis
