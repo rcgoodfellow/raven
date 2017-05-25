@@ -1,0 +1,42 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+
+    - apt: name={{item}} state=latest update_cache=yes
+      with_items:
+        - vim
+        - snmp
+        - golang
+        - bash-completion
+        - git
+        - build-essential
+
+    - file:
+        path: /home/rvn/.go/src/github.com/deter-project
+        state: directory
+        owner: rvn
+        group: rvn
+
+    - file:
+        src: /opt/switch-drivers
+        dest: /home/rvn/.go/src/github.com/deter-project/switch-drivers
+        state: link
+        owner: rvn
+        group: rvn
+    
+    - lineinfile:
+        line: "{{ item }}"
+        path: /home/rvn/.bashrc
+      with_items:
+        - export GOPATH=/home/rvn/.go
+        - export PATH=/home/rvn/.go/bin:$PATH
+    
+    - shell: go get {{item}}
+      environment:
+        GOPATH: /home/rvn/.go
+      with_items:
+        - github.com/fatih/color
+        - github.com/garyburd/redigo/redis
+        - github.com/soniah/gosnmp

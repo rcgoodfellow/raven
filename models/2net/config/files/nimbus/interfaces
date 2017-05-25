@@ -14,8 +14,14 @@ iface swp1
 auto swp2
 iface swp2
 
+auto swp3
+iface swp3
+
+auto swp4
+iface swp4
+
 auto bridge
 iface bridge
   bridge-vlan-aware yes
-  bridge-ports swp1 swp2
+  bridge-ports swp1 swp2 swp3 swp4
   bridge-stp off

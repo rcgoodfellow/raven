@@ -8,3 +8,17 @@
       with_items:
         - ip addr add 10.47.0.1/24 dev eth1
         - ip link set up dev eth1
+      ignore_errors: yes
+    
+    - name: install software
+      apt: name={{item}} state=latest update_cache=yes
+      with_items:
+        - lldpd
+        - redis-server
+        - python3-pip
+        - ansible
+        - bash-completion
+        - git
+        - vim
+        - tmux
+        - golang

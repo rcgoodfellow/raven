@@ -10,6 +10,8 @@
         - lldpd
         - redis-server
         - python3-pip
+        - ansible
+        - sshpass
         - bash-completion
         - git
         - vim
@@ -54,3 +56,18 @@
       with_items:
         - github.com/fatih/color
         - github.com/garyburd/redigo/redis
+    
+    - blockinfile:
+        path: /etc/ansible/hosts
+        content: |
+          [nodes]
+            n0 ansible_ssh_user=rvn ansible_ssh_pass=rvn
+            n1 ansible_ssh_user=rvn ansible_ssh_pass=rvn
+            nimbus ansible_ssh_user=rvn ansible_ssh_pass=rvn
+            control ansible_ssh_user=rvn ansible_ssh_pass=rvn
+
+    - blockinfile:
+        path: /etc/ansible/ansible.cfg
+        content: |
+          [defaults]
+          host_key_checking = False

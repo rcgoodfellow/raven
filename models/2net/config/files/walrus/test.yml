@@ -1,0 +1,36 @@
+---
+
+- hosts: n0
+  become: true
+
+  tasks:
+    - name: ping test
+      shell: /tmp/config/pingtest.sh 10.47.0.2 vpath-create >> /tmp/pingtest
+      async: 3600
+      poll: 0
+      tags:
+        - vpath-create
+
+- hosts: n1
+  become: true
+
+  tasks:
+    - name: ping test
+      shell: /tmp/config/pingtest.sh 10.47.0.1 vpath-create >> /tmp/pingtest
+      async: 3600
+      poll: 0
+      tags:
+        - vpath-create
+
+- hosts: control
+
+  tasks:
+    - name: create virtual path
+      shell: /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 4 set access 2001
+      tags:
+        - vpath-create
+    
+    - name: destroy virtual path
+      shell: /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 4 clear
+      tags:
+        - vpath-destroy

@@ -42,7 +42,11 @@ nodes = Range(2).map(i => ({
   'name': `n${i}`,
   'image': 'debian-stretch',
   'os': 'linux',
-  'level': 3
+  'level': 3,
+  'mounts': [
+    { 'source': '/space/walrustf',              'point': '/opt/walrus'},
+    { 'source': workspace+'/config/files/node', 'point': '/tmp/config' }
+  ]
 }));
 
 links = [
