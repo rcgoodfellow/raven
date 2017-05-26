@@ -41,6 +41,10 @@
         - vpath-create
     
     - name: destroy virtual path
-      command: /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 4 clear
+      command: "{{item}}"
       tags:
         - vpath-destroy
+      with_items:
+        - /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 4 clear
+        - /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 set access 3
+        - /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 4 set access 4

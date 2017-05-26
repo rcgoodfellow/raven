@@ -59,7 +59,14 @@
         GOPATH: /home/rvn/.go
       with_items:
         - github.com/fatih/color
-        - github.com/garyburd/redigo/redis
+        - github.com/go-redis/redis
+
+    - shell: go install
+      args:
+        chdir: /home/rvn/.go/src/github.com/rcgoodfellow/walrustf/wtf
+      environment:
+        GOPATH: /home/rvn/.go
+        GOBIN: /home/rvn/.go/bin
     
     - blockinfile:
         path: /etc/ansible/hosts
@@ -75,3 +82,7 @@
         content: |
           [defaults]
           host_key_checking = False
+
+    - file:
+        path: /usr/share/bash-completion/completions/wtf
+        state: absent

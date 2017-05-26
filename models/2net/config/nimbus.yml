@@ -36,8 +36,11 @@
         - netlink
 
     - lineinfile:
-        line: export GOPATH=/root/.go
+        line: "{{ item }}"
         path: /root/.bashrc
+      with_items:
+        - export GOPATH=/root/.go
+        - export PATH=/root/.go/bin:$PATH
     
     - shell: go get {{item}}
       environment:
@@ -45,6 +48,29 @@
       with_items:
         - github.com/vishvananda/netlink/nl
 
+    - shell: go install
+      args:
+        chdir: /root/.go/src/github.com/rcgoodfellow/agx/qbridge
+      environment:
+        GOPATH: /root/.go
+        GOBIN: /root/.go/bin
+
     - service:
         name: snmpd
         state: restarted
+
+    - shell: "{{item}}"
+      with_items:
+        - ip link set down dev bridge | sleep 0
+        - brctl delbr bridge | sleep 0
+        - brctl addbr bridge
+        - ip link set bridge type bridge vlan_filtering 1
+        - brctl addif bridge swp1
+        - brctl addif bridge swp2
+        - brctl addif bridge swp3
+        - brctl addif bridge swp4
+        - ip link set up dev swp1
+        - ip link set up dev swp2
+        - ip link set up dev swp3
+        - ip link set up dev swp4
+        - ip link set up dev bridge
