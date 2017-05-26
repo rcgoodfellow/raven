@@ -154,14 +154,10 @@
         remote_src: true
         mode: "a+x"
 
-    - name: build utilities
-      command: make
-      args:
-        chdir: "{{playbook_dir}}/util/iamme"
-
-    - name: copy utilities
-      copy:
-        src: "{{playbook_dir}}/util/iamme/iamme"
-        dest: /var/rvn/util/iamme-linux
-        remote_src: true
-        mode: "a+x"
+    - name: fetch utilities
+      get_url:
+        url: http://mirror.deterlab.net/rvn/util/{{item}}
+        dest: /var/rvn/util/{{item}}
+      with_items:
+        - iamme-linux
+        - iamme-freebsd
