@@ -44,6 +44,7 @@
         - {path: /var/rvn/img, state: directory}
         - {path: /var/rvn/run, state: touch}
         - {path: /var/rvn/ssh, state: directory}
+        - {path: /var/rvn/util, state: directory}
         - {path: /usr/local/lib/rvn, state: directory}
         - {path: /root/.ssh, state: directory}
         - {path: /root/.go, state: directory}
@@ -150,5 +151,17 @@
       copy:
         src: /root/.go/src/github.com/rcgoodfellow/raven/go-rvn-ansible/go-rvn-ansible
         dest: /usr/local/bin/rvn-ansible
+        remote_src: true
+        mode: "a+x"
+
+    - name: build utilities
+      command: make
+      args:
+        chdir: "{{playbook_dir}}/util/iamme"
+
+    - name: copy utilities
+      copy:
+        src: "{{playbook_dir}}/util/iamme/iamme"
+        dest: /var/rvn/util/iamme-linux
         remote_src: true
         mode: "a+x"
