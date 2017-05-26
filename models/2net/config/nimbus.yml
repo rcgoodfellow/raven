@@ -40,6 +40,7 @@
         path: /root/.bashrc
       with_items:
         - export GOPATH=/root/.go
+        - export GOBIN=/root/.go/bin
         - export PATH=/root/.go/bin:$PATH
     
     - shell: go get {{item}}
@@ -74,3 +75,5 @@
         - ip link set up dev swp3
         - ip link set up dev swp4
         - ip link set up dev bridge
+
+    - shell: nohup /root/.go/bin/qbridge > /dev/null 2>&1  &
