@@ -62,18 +62,29 @@
 
     - shell: "{{item}}"
       with_items:
+        # set up the bridge
         - ip link set down dev bridge | sleep 0
         - brctl delbr bridge | sleep 0
         - brctl addbr bridge
         - ip link set bridge type bridge vlan_filtering 1
+
+        # add interfaces to the bridge
         - brctl addif bridge swp1
         - brctl addif bridge swp2
         - brctl addif bridge swp3
         - brctl addif bridge swp4
+
+        # bring up the interfaces
         - ip link set up dev swp1
         - ip link set up dev swp2
         - ip link set up dev swp3
         - ip link set up dev swp4
         - ip link set up dev bridge
+
+        # linux puts vid 1 on bridged interfaces by default, we don't want that
+        - bridge vlan del vid 1 dev swp1
+        - bridge vlan del vid 1 dev swp2
+        - bridge vlan del vid 1 dev swp3
+        - bridge vlan del vid 1 dev swp4
 
     - shell: nohup /root/.go/bin/qbridge > /dev/null 2>&1  &
