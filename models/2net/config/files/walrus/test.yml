@@ -1,9 +1,14 @@
 ---
 
 - hosts: n0
-  become: true
 
   tasks:
+    - name: clear existing pingtests
+      command: pkill -f pingtest -9
+      ignore_errors: yes
+      tags:
+        - vpath-create
+
     - name: ping test
       shell: /tmp/config/pingtest.sh 10.47.0.2 vpath-create >> /tmp/pingtest
       async: 3600
@@ -12,9 +17,14 @@
         - vpath-create
 
 - hosts: n1
-  become: true
 
   tasks:
+    - name: clear existing pingtests
+      command: pkill -f pingtest -9
+      ignore_errors: yes
+      tags:
+        - vpath-create
+
     - name: ping test
       shell: /tmp/config/pingtest.sh 10.47.0.1 vpath-create >> /tmp/pingtest
       async: 3600
@@ -26,11 +36,11 @@
 
   tasks:
     - name: create virtual path
-      shell: /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 4 set access 2001
+      command: /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 4 set access 2001
       tags:
         - vpath-create
     
     - name: destroy virtual path
-      shell: /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 4 clear
+      command: /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 4 clear
       tags:
         - vpath-destroy

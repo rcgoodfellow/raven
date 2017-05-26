@@ -4,8 +4,12 @@
 
   tasks:
 
+    - name: update apt-cache
+      apt:
+        update_cache: yes
+
     - name: install software
-      apt: name={{item}} state=latest update_cache=yes
+      apt: name={{item}} state=latest
       with_items:
         - lldpd
         - redis-server

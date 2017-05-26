@@ -4,7 +4,11 @@
 
   tasks:
 
-    - apt: name={{item}} state=latest update_cache=yes
+    - name: update apt-cache
+      apt:
+        update_cache: yes
+
+    - apt: name={{item}} state=latest
       with_items:
         - vim
         - golang

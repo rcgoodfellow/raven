@@ -17,6 +17,7 @@
       mount:
         name: {{.Point}}
         src: {{$.NFS}}:{{.Source}}
+        opts: soft
         fstype: nfs
         state: mounted
 {{- end}}
