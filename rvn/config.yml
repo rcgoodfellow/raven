@@ -11,13 +11,15 @@
       copy:
         src: /var/rvn/util/iamme-linux
         dest: /usr/local/bin/iamme
-      when: result.stdout == "Linux"
+        mode: "a+x"
+      when: ostype.stdout == "Linux"
     
     - name: copy utils
       copy:
         src: /var/rvn/util/iamme-bsd
         dest: /usr/local/bin/iamme
-      when: result.stdout == "FreeBSD"
+        mode: "a+x"
+      when: ostype.stdout == "FreeBSD"
 
     - name: set hostname
       hostname:
@@ -27,6 +29,14 @@
       lineinfile:
         name: /etc/hosts
         line: '127.0.0.1    {{.Host.Name}}'
+
+    - name: update libvirt dns
+      command: /usr/local/bin/iamme eth0 {{.NFS}}
+      when: ostype.stdout == "Linux"
+    
+    - name: update libvirt dns
+      command: /usr/local/bin/iamme vtnet0 {{.NFS}}
+      when: ostype.stdout == "FreeBSD"
 
 {{range .Host.Mounts}}
     - name: mount {{.Point}}
