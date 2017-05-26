@@ -50,6 +50,10 @@
 #define SUCCESS 0
 #define FAILURE 1
 
+#ifdef __FreeBSD__
+#define HOST_NAME_MAX 64
+#endif
+
 // 
 // Data structures
 //

@@ -3,6 +3,22 @@
   become: true
 
   tasks:
+    - name: determine os
+      command: uname -s
+      register: ostype
+
+    - name: copy utils
+      copy:
+        src: /var/rvn/util/iamme-linux
+        dest: /usr/local/bin/iamme
+      when: result.stdout == "Linux"
+    
+    - name: copy utils
+      copy:
+        src: /var/rvn/util/iamme-bsd
+        dest: /usr/local/bin/iamme
+      when: result.stdout == "FreeBSD"
+
     - name: set hostname
       hostname:
         name: {{.Host.Name}}
