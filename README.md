@@ -55,3 +55,14 @@ Use the push, destroy,, launch, mount and configure buttons to realize, configur
 <!--
 See [this article](http://dev.goodwu.net/distributed-systems/testing/networking/infrastructure/2017/05/26/distributed-walrus.html)for a more complete tutorial.
 -->
+
+## Installing
+I have tested Raven on Debian-Stretch and Ubuntu 16.04. Contributions to support other distros welcome!
+
+```shell
+git clone git@github.com:rcgoodfellow/raven
+cd raven
+./setup-ansible.sh
+ansible-playbook setup.yml
+
+```
