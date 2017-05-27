@@ -56,8 +56,10 @@ Use the push, destroy,, launch, mount and configure buttons to realize, configur
 See [this article](http://dev.goodwu.net/distributed-systems/testing/networking/infrastructure/2017/05/26/distributed-walrus.html)for a more complete tutorial.
 -->
 
-## Installing
+## Getting started
 I have tested Raven on Debian-Stretch and Ubuntu 16.04. Contributions to support other distros welcome!
+
+### Installing
 
 ```shell
 git clone git@github.com:rcgoodfellow/raven
@@ -66,3 +68,24 @@ cd raven
 ansible-playbook setup.yml
 
 ```
+
+### Tinkering
+First start the raven application (you must be root due to the way we use libvirt)
+
+```shell
+sudo su
+cd $GOPATH:/src/github.com/rcgoodfellow/raven/web
+revel run
+```
+
+Then open up a web browser using a path to a raven directoy. Raven itself comes with a few. Try 
+```
+http://localhost:9000/?dir=/space/raven/models/2net
+```
+for starters. To access virtual machines you can use the `rvn-ssh` command for example
+
+```shell
+rvn-ssh 2net n0
+```
+Raven also comes with the `rvn-ansible` command for launching ansible playbooks against virtual machines in a convinient ad-hoc nature.
+
