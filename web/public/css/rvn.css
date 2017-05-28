@@ -37,3 +37,7 @@
   position: absolute;
   pointer-events: none;
 }
+
+#status-board{
+  background: black;
+}

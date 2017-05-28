@@ -12,6 +12,37 @@ import (
 	"strings"
 )
 
+var conn *libvirt.Connect
+
+func connect() {
+	var err error
+	conn, err = libvirt.NewConnect("qemu:///system")
+	if err != nil {
+		log.Printf("libvirt connect failure: %v", err)
+	}
+}
+
+func isAlive() bool {
+	result, err := conn.IsAlive()
+	if err != nil {
+		log.Printf("error assesing connection liveness - %v", err)
+		return false
+	}
+	return result
+}
+
+func checkConnect() {
+	for conn == nil {
+		log.Printf("connection nil - reconnecting")
+		connect()
+	}
+
+	for !isAlive() {
+		log.Printf("connection dead - reconnecting")
+		connect()
+	}
+}
+
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
  * Public API Implementation
@@ -90,12 +121,15 @@ func Create(topo Topo) {
 	data, _ := json.MarshalIndent(topo, "", "  ")
 	ioutil.WriteFile(topoDir+"/"+topo.Name+".json", []byte(data), 0644)
 
-	conn, err := libvirt.NewConnect("qemu:///system")
-	if err != nil {
-		log.Printf("libvirt connect failure: %v", err)
-		return
-	}
-	defer conn.Close()
+	/*
+		conn, err := libvirt.NewConnect("qemu:///system")
+		if err != nil {
+			log.Printf("libvirt connect failure: %v", err)
+			return
+		}
+		defer conn.Close()
+	*/
+	checkConnect()
 
 	for _, d := range doms {
 		xml, err := d.Marshal()
@@ -142,12 +176,8 @@ func Create(topo Topo) {
 // is running within libvirt it is torn down. The entire definition of the
 // system is also removed from libvirt.
 func Destroy(topoName string) {
-	conn, err := libvirt.NewConnect("qemu:///system")
-	if err != nil {
-		log.Printf("libvirt connect failure: %v", err)
-		return
-	}
-	defer conn.Close()
+	checkConnect()
+	dbCheckConnection()
 
 	topo, err := loadTopo(topoName)
 	if err != nil {
@@ -159,9 +189,13 @@ func Destroy(topoName string) {
 
 	for _, x := range topo.Nodes {
 		destroyDomain(topo.QualifyName(x.Name), conn)
+		state_key := fmt.Sprintf("config_state:%s", x.Name)
+		db.Del(state_key)
 	}
 	for _, x := range topo.Switches {
 		destroyDomain(topo.QualifyName(x.Name), conn)
+		state_key := fmt.Sprintf("config_state:%s", x.Name)
+		db.Del(state_key)
 	}
 
 	for _, x := range topo.Links {
@@ -180,12 +214,7 @@ func Destroy(topoName string) {
 // system is still launching. Use the Status function to check up on a the
 // launch process.
 func Launch(topoName string) []string {
-	conn, err := libvirt.NewConnect("qemu:///system")
-	if err != nil {
-		log.Printf("libvirt connect failure: %v", err)
-		return []string{fmt.Sprintf("%v", err)}
-	}
-	defer conn.Close()
+	checkConnect()
 
 	topo, err := loadTopo(topoName)
 	if err != nil {
@@ -260,9 +289,10 @@ func Launch(topoName string) []string {
 // DomStatus encapsulates various information about a libvirt domain for
 // purposes of serialization and presentation.
 type DomStatus struct {
-	State string
-	IP    string
-	VNC   int
+	State       string
+	ConfigState string
+	IP          string
+	VNC         int
 }
 
 // The status function returns the runtime status of a topology, node by node
@@ -271,12 +301,18 @@ func Status(topoName string) map[string]interface{} {
 
 	status := make(map[string]interface{})
 
-	conn, err := libvirt.NewConnect("qemu:///system")
-	if err != nil {
-		log.Printf("libvirt connect failure: %v", err)
-		return status
-	}
-	defer conn.Close()
+	/*
+		conn, err := libvirt.NewConnect("qemu:///system")
+		if err != nil {
+			log.Printf("libvirt connect failure: %v", err)
+			return status
+		}
+		defer func() {
+			log.Println("closing libvirt connection")
+			conn.Close()
+		}()
+	*/
+	checkConnect()
 
 	topo, err := loadTopo(topoName)
 	if err != nil {
@@ -294,10 +330,10 @@ func Status(topoName string) map[string]interface{} {
 	status["links"] = links
 
 	for _, x := range topo.Nodes {
-		nodes[x.Name] = domainStatus(topo.QualifyName(x.Name), conn)
+		nodes[x.Name] = domainStatus(x.Name, topo.QualifyName(x.Name), conn)
 	}
 	for _, x := range topo.Switches {
-		switches[x.Name] = domainStatus(topo.QualifyName(x.Name), conn)
+		switches[x.Name] = domainStatus(x.Name, topo.QualifyName(x.Name), conn)
 	}
 
 	for _, x := range topo.Links {
@@ -308,19 +344,23 @@ func Status(topoName string) map[string]interface{} {
 	if ok {
 		status["mgmtip"] = fmt.Sprintf("172.22.%d.1", subnet)
 	}
+
 	return status
 }
 
+/*
 func DomainStatus(name string) (DomStatus, error) {
-	conn, err := libvirt.NewConnect("qemu:///system")
-	if err != nil {
-		log.Printf("libvirt connect failure: %v", err)
-		return DomStatus{}, err
-	}
-	defer conn.Close()
+	//conn, err := libvirt.NewConnect("qemu:///system")
+	//if err != nil {
+	//		log.Printf("libvirt connect failure: %v", err)
+	//			return DomStatus{}, err
+	//		}
+	//	defer conn.Close()
+	checkConnect()
 
 	return domainStatus(name, conn), nil
 }
+*/
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
@@ -426,9 +466,9 @@ func loadTopo(name string) (Topo, error) {
 	return LoadTopo(path)
 }
 
-func domainStatus(name string, conn *libvirt.Connect) DomStatus {
+func domainStatus(name, qname string, conn *libvirt.Connect) DomStatus {
 	var status DomStatus
-	x, err := conn.LookupDomainByName(name)
+	x, err := conn.LookupDomainByName(qname)
 	if err != nil {
 		status.State = "non-existant"
 	} else {
@@ -446,6 +486,7 @@ func domainStatus(name string, conn *libvirt.Connect) DomStatus {
 					status.IP = ifx.Addrs[0].Addr
 				}
 			}
+			status.ConfigState = configStatus(name)
 		case libvirt.DOMAIN_BLOCKED:
 			status.State = "blocked"
 		case libvirt.DOMAIN_PAUSED:
@@ -462,6 +503,17 @@ func domainStatus(name string, conn *libvirt.Connect) DomStatus {
 		x.Free()
 	}
 	return status
+}
+
+func configStatus(name string) string {
+	dbCheckConnection()
+	state_key := fmt.Sprintf("config_state:%s", name)
+	val, err := db.Get(state_key).Result()
+	if err == nil {
+		return val
+	} else {
+		return ""
+	}
 }
 
 func networkStatus(name string, conn *libvirt.Connect) string {

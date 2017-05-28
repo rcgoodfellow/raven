@@ -3,10 +3,41 @@ package rvn
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-redis/redis"
 	"io/ioutil"
 	"log"
 	"os/user"
 )
+
+var db *redis.Client
+
+func dbConnect() {
+	db = redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	if db == nil {
+		log.Fatal("failed to connect to db")
+	}
+}
+
+func dbAlive() bool {
+	_, err := db.Ping().Result()
+	if err != nil {
+		log.Printf("ping db failed")
+		return false
+	}
+	return true
+}
+
+func dbCheckConnection() {
+	for db == nil {
+		dbConnect()
+	}
+
+	for !dbAlive() {
+		dbConnect()
+	}
+}
 
 type Mount struct {
 	Point  string `json:"point"`
@@ -77,7 +108,10 @@ func LoadTopoByName(system string) (Topo, error) {
 }
 
 func SysDir() string {
-	u, _ := user.Current()
+	u, err := user.Current()
+	if err != nil {
+		log.Printf("error getting user: %v", err)
+	}
 	return u.HomeDir + "/.rvn/systems"
 }
 

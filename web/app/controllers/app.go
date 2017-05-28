@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/rcgoodfellow/raven/rvn"
 	"github.com/revel/revel"
 	"html/template"
@@ -82,15 +83,32 @@ func (c App) Mount() revel.Result {
 }
 
 func (c App) Status() revel.Result {
+	moreStyles := []string{
+		"/public/css/status.css",
+	}
+
+	moreScripts := []string{
+		"/public/js/statusboard.js",
+	}
+
 	topo := c.Params.Query.Get("topo")
-	log.Printf("status: topo=%s", topo)
+	fragment := c.Params.Query.Get("fragment")
+	//log.Printf("status: topo=%s fragment=%s", topo, fragment)
 	if len(topo) == 0 {
 		c.Response.Status = 400
 		return c.RenderText("bad argument")
 	}
-
 	status := rvn.Status(topo)
-	return c.RenderJSON(status)
+	nodes := status["nodes"]
+
+	meta := template.JS(fmt.Sprintf("var topo = '%s';", topo))
+
+	if fragment == "true" {
+		c.ViewArgs["nodes"] = nodes
+		return c.RenderTemplate("statusboard.html")
+	} else {
+		return c.Render(meta, nodes, moreStyles, moreScripts)
+	}
 }
 
 func (c App) Destroy() revel.Result {
@@ -132,7 +150,7 @@ func (c App) Configure() revel.Result {
 		return c.RenderText("bad argument")
 	}
 
-	rvn.Configure(topo, true)
+	go rvn.Configure(topo, true)
 	c.Response.Status = 200
 	return c.RenderText("ok")
 }

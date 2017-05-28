@@ -112,6 +112,10 @@ func preConfigure(topo Topo) {
 
 func runConfig(yml, topo string, h Host, s DomStatus) {
 
+	dbCheckConnection()
+	db_state_key := fmt.Sprintf("config_state:%s", h.Name)
+	db.Set(db_state_key, "configuring", 0)
+
 	if strings.ToLower(h.OS) == "netboot" {
 		return
 	}
@@ -135,6 +139,8 @@ func runConfig(yml, topo string, h Host, s DomStatus) {
 	if err != nil {
 		log.Printf("failed to run configuration for %s - %v", h.Name, err)
 		log.Printf(string(out))
+		db.Set(db_state_key, "failed", 0)
 	}
 
+	db.Set(db_state_key, "success", 0)
 }

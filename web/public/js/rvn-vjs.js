@@ -121,6 +121,7 @@ function mount() {
 
 function status() {
   console.log('status');
+  /*
   $.get("/rvn-status?topo="+rspace.name, function(data) {
     console.log(data);
     var xi = document.getElementById('tb-info');
@@ -129,6 +130,9 @@ function status() {
       rspace['mgmtip'] = data['mgmtip'];
     }
   });
+  */
+
+  window.open("/rvn-status?topo="+rspace.name, "_blank")
 }
 
 function destroy() {

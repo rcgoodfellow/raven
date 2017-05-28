@@ -29,6 +29,7 @@
       apt: name={{item}} state=latest update_cache=yes
       with_items:
         - build-essential
+        - redis-server
         - git
         - golang
         - libvirt-dev
@@ -112,6 +113,11 @@
         name: "{{libvirtd}}"
         state: restarted
 
+    - name: restart redis
+      service:
+        name: redis-server
+        state: restarted
+
     - name: install go libraries
       shell: go get {{item}}
       environment:
@@ -120,6 +126,7 @@
         - github.com/libvirt/libvirt-go
         - github.com/libvirt/libvirt-go-xml
         - github.com/revel/cmd/revel
+        - github.com/go-redis/redis
 
     - name: link raven dir into gopath
       file:

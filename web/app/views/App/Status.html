@@ -1,0 +1,15 @@
+{{set . "title" "rvn"}}
+{{template "header.html" .}} 
+
+<body onload="runStatusBoard()">
+<div id="status-container">
+  {{template "statusboard.html" .}}
+</div>
+</body>
+
+<script>
+{{.meta}}
+</script>
+
+{{template "footer.html" .}}
+
