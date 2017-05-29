@@ -100,14 +100,16 @@ func (c App) Status() revel.Result {
 	}
 	status := rvn.Status(topo)
 	nodes := status["nodes"]
+	switches := status["switches"]
 
 	meta := template.JS(fmt.Sprintf("var topo = '%s';", topo))
 
 	if fragment == "true" {
 		c.ViewArgs["nodes"] = nodes
+		c.ViewArgs["switches"] = switches
 		return c.RenderTemplate("statusboard.html")
 	} else {
-		return c.Render(meta, nodes, moreStyles, moreScripts)
+		return c.Render(meta, nodes, switches, moreStyles, moreScripts)
 	}
 }
 

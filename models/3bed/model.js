@@ -21,6 +21,9 @@ configMount = (name) => ({
   'point': '/tmp/config'
 });
 
+agxMount = { 'source': '/space/agx',         'point': '/opt/agx' },
+netlinkMount = { 'source': '/space/netlink', 'point': '/opt/netlink' },
+
 
 // testbed infrastructure nodes
 infra = [boss, users] = 
@@ -46,8 +49,8 @@ nodes = [
 
 
 switches = [
-  Switch('stem', 2, [deter_mount, configMount('stem')]),
-  Switch('leaf', 4, [deter_mount, configMount('leaf')])
+  Switch('stem', 2, [deter_mount, configMount('stem'), agxMount, netlinkMount]),
+  Switch('leaf', 4, [deter_mount, configMount('leaf'), agxMount, netlinkMount])
 ];
 
 links = [

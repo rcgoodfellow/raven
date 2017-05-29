@@ -1,6 +1,24 @@
 <div id="status-board">
   <table class="node-status">
+    <tr>
+      <td class="header"> 
+        <span class="type-header node-header">Nodes</span> 
+      </td>
+    </tr>
   {{range $key, $value := .nodes}}
+    <tr>
+      <td><span class="node-id">{{$key}}</span></td>
+      <td><span class="state"> {{$value.State}}</span></td>
+      <td><span class="config-state"> {{$value.ConfigState}}</span></td>
+      <td><span class="ip"> {{$value.IP}}</span></td>
+    </tr>
+  {{end}}
+    <tr>
+      <td class="header">
+        <span class="type-header switch-header">Switches</span>
+      </td>
+    </tr>
+  {{range $key, $value := .switches}}
     <tr>
       <td><span class="node-id">{{$key}}</span></td>
       <td><span class="state"> {{$value.State}}</span></td>
