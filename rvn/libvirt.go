@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 var conn *libvirt.Connect
@@ -35,11 +36,13 @@ func checkConnect() {
 	for conn == nil {
 		log.Printf("connection nil - reconnecting")
 		connect()
+		time.Sleep(1 * time.Second)
 	}
 
 	for !isAlive() {
 		log.Printf("connection dead - reconnecting")
 		connect()
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
@@ -121,14 +124,6 @@ func Create(topo Topo) {
 	data, _ := json.MarshalIndent(topo, "", "  ")
 	ioutil.WriteFile(topoDir+"/"+topo.Name+".json", []byte(data), 0644)
 
-	/*
-		conn, err := libvirt.NewConnect("qemu:///system")
-		if err != nil {
-			log.Printf("libvirt connect failure: %v", err)
-			return
-		}
-		defer conn.Close()
-	*/
 	checkConnect()
 
 	for _, d := range doms {
@@ -301,17 +296,6 @@ func Status(topoName string) map[string]interface{} {
 
 	status := make(map[string]interface{})
 
-	/*
-		conn, err := libvirt.NewConnect("qemu:///system")
-		if err != nil {
-			log.Printf("libvirt connect failure: %v", err)
-			return status
-		}
-		defer func() {
-			log.Println("closing libvirt connection")
-			conn.Close()
-		}()
-	*/
 	checkConnect()
 
 	topo, err := loadTopo(topoName)
@@ -347,20 +331,6 @@ func Status(topoName string) map[string]interface{} {
 
 	return status
 }
-
-/*
-func DomainStatus(name string) (DomStatus, error) {
-	//conn, err := libvirt.NewConnect("qemu:///system")
-	//if err != nil {
-	//		log.Printf("libvirt connect failure: %v", err)
-	//			return DomStatus{}, err
-	//		}
-	//	defer conn.Close()
-	checkConnect()
-
-	return domainStatus(name, conn), nil
-}
-*/
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *

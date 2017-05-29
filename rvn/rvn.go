@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os/user"
+	"time"
 )
 
 var db *redis.Client
@@ -32,10 +33,12 @@ func dbAlive() bool {
 func dbCheckConnection() {
 	for db == nil {
 		dbConnect()
+		time.Sleep(1 * time.Second)
 	}
 
 	for !dbAlive() {
 		dbConnect()
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
