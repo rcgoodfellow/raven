@@ -16,7 +16,7 @@
     
     - name: copy utils
       copy:
-        src: /var/rvn/util/iamme-bsd
+        src: /var/rvn/util/iamme-freebsd
         dest: /usr/local/bin/iamme
         mode: "a+x"
       when: ostype.stdout == "FreeBSD"
@@ -34,16 +34,17 @@
       command: /usr/local/bin/iamme eth0 {{.NFS}}
       when: ostype.stdout == "Linux"
     
-    - name: update libvirt dns
-      command: /usr/local/bin/iamme vtnet0 {{.NFS}}
-      when: ostype.stdout == "FreeBSD"
+    #
+    #- name: update libvirt dns
+    #  command: /usr/local/bin/iamme vtnet0 {{.NFS}}
+    #  when: ostype.stdout == "FreeBSD"
 
 {{range .Host.Mounts}}
     - name: mount {{.Point}}
       mount:
         name: {{.Point}}
         src: {{$.NFS}}:{{.Source}}
-        opts: soft
+        opts: rw,soft
         fstype: nfs
         state: mounted
 {{- end}}

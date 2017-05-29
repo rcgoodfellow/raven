@@ -79,6 +79,9 @@ func Configure(topoName string, withUserConfig bool) {
 	}
 
 	for _, x := range topo.Nodes {
+		if x.OS == "netboot" {
+			continue
+		}
 		wg.Add(1)
 		go doConfig(topo, x.Host, node_status[x.Name])
 	}
@@ -113,7 +116,7 @@ func preConfigure(topo Topo) {
 func runConfig(yml, topo string, h Host, s DomStatus) {
 
 	dbCheckConnection()
-	db_state_key := fmt.Sprintf("config_state:%s", h.Name)
+	db_state_key := fmt.Sprintf("config_state:%s:%s", topo, h.Name)
 	db.Set(db_state_key, "configuring", 0)
 
 	if strings.ToLower(h.OS) == "netboot" {
@@ -140,7 +143,8 @@ func runConfig(yml, topo string, h Host, s DomStatus) {
 		log.Printf("failed to run configuration for %s - %v", h.Name, err)
 		log.Printf(string(out))
 		db.Set(db_state_key, "failed", 0)
+	} else {
+		db.Set(db_state_key, "success", 0)
 	}
 
-	db.Set(db_state_key, "success", 0)
 }

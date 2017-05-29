@@ -184,12 +184,12 @@ func Destroy(topoName string) {
 
 	for _, x := range topo.Nodes {
 		destroyDomain(topo.QualifyName(x.Name), conn)
-		state_key := fmt.Sprintf("config_state:%s", x.Name)
+		state_key := fmt.Sprintf("config_state:%s:%s", topoName, x.Name)
 		db.Del(state_key)
 	}
 	for _, x := range topo.Switches {
 		destroyDomain(topo.QualifyName(x.Name), conn)
-		state_key := fmt.Sprintf("config_state:%s", x.Name)
+		state_key := fmt.Sprintf("config_state:%s:%s", topoName, x.Name)
 		db.Del(state_key)
 	}
 
@@ -314,10 +314,12 @@ func Status(topoName string) map[string]interface{} {
 	status["links"] = links
 
 	for _, x := range topo.Nodes {
-		nodes[x.Name] = domainStatus(x.Name, topo.QualifyName(x.Name), conn)
+		nodes[x.Name] =
+			domainStatus(topoName, x.Name, topo.QualifyName(x.Name), conn)
 	}
 	for _, x := range topo.Switches {
-		switches[x.Name] = domainStatus(x.Name, topo.QualifyName(x.Name), conn)
+		switches[x.Name] =
+			domainStatus(topoName, x.Name, topo.QualifyName(x.Name), conn)
 	}
 
 	for _, x := range topo.Links {
@@ -405,7 +407,8 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 	return d
 }
 
-func domConnect(net string, h *Host, dom *xlibvirt.Domain, props map[string]interface{}) {
+func domConnect(
+	net string, h *Host, dom *xlibvirt.Domain, props map[string]interface{}) {
 
 	var boot *xlibvirt.DomainInterfaceBoot = nil
 	if strings.ToLower(h.OS) == "netboot" {
@@ -436,7 +439,8 @@ func loadTopo(name string) (Topo, error) {
 	return LoadTopo(path)
 }
 
-func domainStatus(name, qname string, conn *libvirt.Connect) DomStatus {
+func domainStatus(
+	topo, name, qname string, conn *libvirt.Connect) DomStatus {
 	var status DomStatus
 	x, err := conn.LookupDomainByName(qname)
 	if err != nil {
@@ -456,7 +460,7 @@ func domainStatus(name, qname string, conn *libvirt.Connect) DomStatus {
 					status.IP = ifx.Addrs[0].Addr
 				}
 			}
-			status.ConfigState = configStatus(name)
+			status.ConfigState = configStatus(topo, name)
 		case libvirt.DOMAIN_BLOCKED:
 			status.State = "blocked"
 		case libvirt.DOMAIN_PAUSED:
@@ -475,9 +479,9 @@ func domainStatus(name, qname string, conn *libvirt.Connect) DomStatus {
 	return status
 }
 
-func configStatus(name string) string {
+func configStatus(topo, name string) string {
 	dbCheckConnection()
-	state_key := fmt.Sprintf("config_state:%s", name)
+	state_key := fmt.Sprintf("config_state:%s:%s", topo, name)
 	val, err := db.Get(state_key).Result()
 	if err == nil {
 		return val

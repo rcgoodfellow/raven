@@ -41,3 +41,10 @@
 #status-board{
   background: black;
 }
+
+pre {
+  background: #222;
+  color: #ddd;
+  border: none;
+  overflow: visible;
+}
