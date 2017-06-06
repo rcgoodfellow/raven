@@ -1,16 +1,27 @@
 
+replace into node_types
+  set class='switch',
+      type='qbridge'
+;
+
+replace into node_type_attributes
+  set type='qbridge',
+      attrkey='forwarding_protocols',
+      attrvalue='ethernet',
+      attrtype='string'
+;
 
 replace into nodes 
   set node_id='stem',
       phys_nodeid='stem',
-      type='cx1',
+      type='qbridge',
       role='ctrlswitch'
 ;
 
 replace into nodes 
   set node_id='leaf',
       phys_nodeid='leaf',
-      type='cx1',
+      type='qbridge',
       role='testswitch'
 ;
 
