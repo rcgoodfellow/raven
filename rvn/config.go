@@ -125,7 +125,7 @@ func runConfig(yml, topo string, h Host, s DomStatus) {
 
 	extra_vars := "ansible_become_pass=rvn"
 	if strings.ToLower(h.OS) == "freebsd" {
-		extra_vars += " ansible_python_interpreter='/usr/local/bin/python'"
+		extra_vars += " ansible_python_interpreter='/usr/local/bin/python2'"
 	}
 
 	cmd := exec.Command(
