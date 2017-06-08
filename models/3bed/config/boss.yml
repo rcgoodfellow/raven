@@ -69,6 +69,11 @@
       file:
         path: /usr/testbed
         state: directory
+
+    - name: Make snmpit runtime dir
+      file:
+        path: /var/run/snmpit
+        state: directory
     
     - name: Link testbed source
       file:
@@ -90,4 +95,5 @@
       command: pkg install -y {{ item }}
       with_items:
         - p5-SNMP-Util
+        - p5-Class-ISA
         - go

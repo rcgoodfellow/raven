@@ -39,3 +39,8 @@ replace into osidtoimageid
 ;
 
 replace into interface_types values('virtio_net', 10000000, 1, 'RedHat', 'virtio', 1, 'rj45');
+
+replace into interface_capabilities values
+  ('virtio_net', 'protocols', 'ethernet'),
+  ('virtio_net', 'ethernet_defspeed', '10000000')
+;

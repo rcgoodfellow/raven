@@ -11,13 +11,14 @@
         dest: /etc/resolv.conf
         line: search vbed3.deterlab.net
 
-    - name: Add switch to testbed dns
+    - name: Add stuff to testbed dns
       lineinfile:
         dest: /usr/local/etc/namedb/vbed3.deterlab.net.internal.db.head
         line: "{{ item }}"
       with_items:
         - "stem IN A 192.168.254.1"
         - "leaf IN A 192.168.254.2"
+        - "event-server IN A 192.168.253.1"
 
     - name: Re-initialize testbed dns
       command:  /usr/testbed/sbin/named_setup
@@ -136,6 +137,17 @@
         dest: /usr/testbed/sbin/lldp-switchmac
         mode: "a+x"
         remote_src: true
-
     
+    - name: build dsnmp
+      shell: go build snmp.go
+      environment:
+        GOPATH: /root/.go
+      args:
+        chdir: /opt/deter/switch-drivers/snmp/apps
 
+    - name: install dsnmp
+      copy:
+        src: /opt/deter/switch-drivers/snmp/apps/dsnmp
+        dest: /usr/testbed/bin/dsnmp
+        mode: "a+x"
+        remote_src: true
