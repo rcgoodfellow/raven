@@ -70,10 +70,12 @@
         path: /usr/testbed
         state: directory
 
+    #yup thats right world writable, thank emulab suid system for swaps
     - name: Make snmpit runtime dir
       file:
         path: /var/run/snmpit
         state: directory
+        mode: "a+rw"
     
     - name: Link testbed source
       file:
