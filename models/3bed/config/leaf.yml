@@ -51,6 +51,13 @@
         - export GOPATH=/root/.go
         - export GOBIN=/root/.go/bin
         - export PATH=/root/.go/bin:$PATH
+
+    - lineinfile:
+        path: /etc/network/interfaces
+        regexp: "address 192.168.254.1/24"
+        line: "address 192.168.254.2/24"
+
+    - shell: ifup vlan2004
     
     - shell: go get {{item}}
       environment:
@@ -66,3 +73,9 @@
         GOBIN: /root/.go/bin
 
     - shell: nohup /root/.go/bin/qbridge > /dev/null 2>&1  &
+
+    - shell: "{{ item }}"
+      with_items:
+        - ip link set up swp4
+        - brctl addif bridge swp4
+        - bridge vlan add vid 2004 dev swp4 pvid untagged

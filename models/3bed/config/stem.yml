@@ -66,3 +66,9 @@
         GOBIN: /root/.go/bin
 
     - shell: nohup /root/.go/bin/qbridge > /dev/null 2>&1  &
+
+    - shell: "{{ item }}"
+      with_items:
+        - ifup swp8
+        - bridge vlan del vid 2003 dev swp8
+        - bridge vlan add vid 2004 dev swp8 pvid untagged

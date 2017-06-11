@@ -6,10 +6,17 @@
     mirror: mirror.deterlab.net
 
   tasks:
+    - name: Tell resolvconf to shove it
+      copy:
+        src: /tmp/config/resolvconf.conf
+        dest: /etc/resolvconf.conf
+        remote_src: true
+
     - name: Setup resolv.conf
-      lineinfile:
+      copy:
+        src: /tmp/config/resolv.conf
         dest: /etc/resolv.conf
-        line: search vbed3.deterlab.net
+        remote_src: true
 
     - name: Add stuff to testbed dns
       lineinfile:
@@ -150,3 +157,6 @@
         dest: /usr/testbed/bin/dsnmp
         mode: "a+x"
         remote_src: true
+
+    - name: clear default vlan from leaf
+      shell: dsnmp leaf vlan 1 clear-all
