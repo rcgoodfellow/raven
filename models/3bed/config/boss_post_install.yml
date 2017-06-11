@@ -159,4 +159,4 @@
         remote_src: true
 
     - name: clear default vlan from leaf
-      shell: dsnmp leaf vlan 1 clear-all
+      shell: /usr/testbed/bin/dsnmp leaf vlan 1 clear-all
