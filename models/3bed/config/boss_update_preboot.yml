@@ -33,11 +33,6 @@
         dest: /tftpboot/pxelinux.cfg/default
         remote_src: True
 
-    - name: create linux-mfs directory
-      file:
-        path: /usr/testbed/www/linux-mfs
-        state: directory
-        mode: 0755
 
     - name: copy linux-mfs kernel
       copy:

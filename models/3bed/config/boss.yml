@@ -22,27 +22,6 @@
         # does not bother to put them back, so we need to restart dhclient to 
         # get them back ourselves
 
-    - name: make dnet dir
-      file:
-        path: /root/.go/src/github.com/deter-project/switch-drivers
-        state: directory
-
-    - name: setup link dnet
-      file:
-        src: /opt/deter/switch-drivers/snmp
-        dest: /root/.go/src/github.com/deter-project/switch-drivers/snmp
-        state: link
-    
-    - name: install software
-      package:
-        name: "{{item}}"
-        state: present
-        use: pkgng
-      with_items:
-        - lldpd
-        - go
-        - git
-
     - name: make sure bashrc exists
       file:
         path: /root/.bashrc
@@ -57,26 +36,11 @@
         - "export GOPATH=~/.go"
         - "export PATH=$GOPATH/bin:$PATH"
 
-    - name: install go dependencies
-      shell: go get {{ item }}
-      environment:
-        GOPATH: /root/.go
-      with_items:
-        - github.com/fatih/color
-        - github.com/soniah/gosnmp
-
     - name: Make testbed directory
       file:
         path: /usr/testbed
         state: directory
 
-    #yup thats right world writable, thank emulab suid system for swaps
-    - name: Make snmpit runtime dir
-      file:
-        path: /var/run/snmpit
-        state: directory
-        mode: "a+rw"
-    
     - name: Link testbed source
       file:
         src: /opt/deter/testbed
@@ -90,12 +54,3 @@
         dest: /usr/bin/perl
         state: link
 
-    #TODO placeholder for installing packages, anything that goes here should
-    #     be ploped into package-build
-    #
-    - name: Install requirements
-      command: pkg install -y {{ item }}
-      with_items:
-        - p5-SNMP-Util
-        - p5-Class-ISA
-        - go
