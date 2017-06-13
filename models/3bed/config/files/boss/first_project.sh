@@ -4,20 +4,11 @@ cd /usr/testbed/sbin
 
 getent passwd adama
 if [ 0 -ne "$?" ]; then 
+  set -e
   ./wap ./newuser /tmp/config/adama.xml
   ./wap ./newproj /tmp/config/galactica.xml
   ./wap ./mkproj galactica
   ./wap ./tbacct add adama
-  ./wap ./tbadmin adama
-  chsh -s /usr/local/bin/bash adama
-  mysql tbdb -e "update users set status='active' where uid='adama'"
   mysql tbdb -e "update sitevariables set value=NULL where name='general/firstinit/state'"
 fi
 
-
-#TODO add adama to boss?
-#/usr/sbin/pw useradd \
-#  $protouser -u $uid -g $agid \
-#	   -G $Ggid -h - \
-#	   -m -d $HOMEDIR/$protouser -s $binshell \
-#	   -c \"$protouser_name

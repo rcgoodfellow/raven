@@ -61,6 +61,12 @@
     - name: Create battlestar project
       command: su elabman -c "/tmp/config/first_project.sh"
 
+    - name: Commission Adama
+      command: "{{ item }}"
+      with_items:
+        - /usr/testbed/sbin/wap /usr/testbed/sbin/tbadmin adama
+        - chsh -s /usr/local/bin/bash adama
+
     - name: clear default vlan from leaf
       shell: /usr/testbed/bin/dsnmp leaf vlan 1 clear-all
 
