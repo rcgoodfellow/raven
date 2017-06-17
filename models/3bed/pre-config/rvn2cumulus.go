@@ -72,6 +72,8 @@ func main() {
 			configs[z.Name] = append(configs[z.Name], bossConfig(z.Port))
 		} else if n.Name == "users" {
 			configs[z.Name] = append(configs[z.Name], usersConfig(z.Port))
+		} else if n.Name == "walrus" {
+			configs[z.Name] = append(configs[z.Name], walrusConfig(z.Port))
 		} else if n.Name == "router" {
 			configs[z.Name] = append(configs[z.Name], routerConfig(z.Port))
 		} else {
@@ -132,6 +134,17 @@ func usersConfig(port string) Ifx {
 		BridgeDefs: []string{
 			"bridge-vids 2002 2003 2005",
 			"bridge-allow-untagged no",
+		}}
+}
+
+//walrus gets attached to the users network in access mode
+func walrusConfig(port string) Ifx {
+	return Ifx{
+		For:  "walrus",
+		Name: port,
+		BridgeDefs: []string{
+			"bridge-access 2005",
+			"bridge-allow-untagged yes",
 		}}
 }
 
