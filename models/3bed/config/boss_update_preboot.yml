@@ -37,13 +37,13 @@
     - name: copy linux-mfs kernel
       copy:
         dest: /usr/testbed/www/linux-mfs/bzImage
-        src: /opt/deter/linux-mfs/bzImage
+        src: /opt/deter/linux-mfs/images/bzImage
         remote_src: True
     
     - name: copy linux-mfs rootfs
       copy:
         dest: /usr/testbed/www/linux-mfs/rootfs.cpio
-        src: /opt/deter/linux-mfs/rootfs.cpio
+        src: /opt/deter/linux-mfs/images/rootfs.cpio
         remote_src: True
 
     - name: update mfs keys
