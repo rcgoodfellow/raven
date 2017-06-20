@@ -49,7 +49,7 @@ func main() {
 		log.Fatal("%s not found in topology", node)
 	}
 
-	ds, err := rvn.DomainStatus(sys + "_" + node)
+	ds, err := rvn.DomainStatus(sys, node)
 	if err != nil {
 		fmt.Printf("error getting node status %v\n", err)
 		os.Exit(1)

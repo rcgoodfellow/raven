@@ -15,7 +15,7 @@ func main() {
 	sys := os.Args[1]
 	node := os.Args[2]
 
-	ds, err := rvn.DomainStatus(sys + "_" + node)
+	ds, err := rvn.DomainStatus(sys, node)
 	if err != nil {
 		fmt.Printf("error getting node status %v\n", err)
 		os.Exit(1)

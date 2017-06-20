@@ -372,15 +372,15 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 		},
 		Memory: &xlibvirt.DomainMemory{Value: 1024, Unit: "MiB"},
 		Devices: &xlibvirt.DomainDeviceList{
-			Serials: []xlibvirt.DomainChardev{
-				xlibvirt.DomainChardev{
+			Serials: []xlibvirt.DomainSerial{
+				xlibvirt.DomainSerial{
 					Type: "pty",
 				},
 			},
-			Consoles: []xlibvirt.DomainChardev{
-				xlibvirt.DomainChardev{
+			Consoles: []xlibvirt.DomainConsole{
+				xlibvirt.DomainConsole{
 					Type:   "pty",
-					Target: &xlibvirt.DomainChardevTarget{Type: "serial"},
+					Target: &xlibvirt.DomainConsoleTarget{Type: "serial"},
 				},
 			},
 			Graphics: []xlibvirt.DomainGraphic{
@@ -410,15 +410,15 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 func domConnect(
 	net string, h *Host, dom *xlibvirt.Domain, props map[string]interface{}) {
 
-	var boot *xlibvirt.DomainInterfaceBoot = nil
+	var boot *xlibvirt.DomainDeviceBoot = nil
 	if strings.ToLower(h.OS) == "netboot" {
 		if props != nil {
 			boot_order, ok := props["boot"]
 			if ok {
 				boot_order_num, ok := boot_order.(float64)
 				if ok {
-					boot = &xlibvirt.DomainInterfaceBoot{
-						Order: int(boot_order_num),
+					boot = &xlibvirt.DomainDeviceBoot{
+						Order: uint(boot_order_num),
 					}
 				}
 			}
@@ -477,6 +477,11 @@ func domainStatus(
 		x.Free()
 	}
 	return status
+}
+
+func DomainStatus(topo, name string) (DomStatus, error) {
+	checkConnect()
+	return domainStatus(topo, name, topo+"_"+name, conn), nil
 }
 
 func configStatus(topo, name string) string {
