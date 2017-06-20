@@ -72,12 +72,6 @@
         - rvn
         - rvn.pub
     
-    - name: set private key permissions
-      file:
-        path: /var/rvn/ssh/rvn
-        group: root
-        owner: root
-        mode: 0600
 
     - name: install javascript libraries
       copy: src={{item.src}} dest=/usr/local/lib/rvn/{{item.dest}}
@@ -90,6 +84,13 @@
       with_items:
         - rvn
         - rvn.pub
+
+    - name: set private key permissions
+      file:
+        path: /var/rvn/ssh/rvn
+        group: root
+        owner: root
+        mode: 0600
 
     - name: set up gopath
       lineinfile:

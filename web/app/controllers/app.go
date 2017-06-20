@@ -56,7 +56,6 @@ func (c App) Index() revel.Result {
 func (c App) Push() revel.Result {
 	var topo rvn.Topo
     log.Println("push")
-    log.Printf("%#v", c.Request.Request)
     err := c.Params.BindJSON(&topo)
     if err != nil {
         log.Printf("invalid push request")
