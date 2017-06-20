@@ -75,6 +75,8 @@
     - name: set private key permissions
       file:
         path: /var/rvn/ssh/rvn
+        group: root
+        owner: root
         mode: 0600
 
     - name: install javascript libraries
