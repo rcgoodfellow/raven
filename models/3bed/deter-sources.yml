@@ -35,4 +35,5 @@
             version: 'master' }
 
     - command: chmod g+w -R /space
+    - command: chmod 0600 /var/rvn/ssh/rvn
 
