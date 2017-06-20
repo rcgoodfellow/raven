@@ -14,7 +14,7 @@
       with_items:
         - { repo: 'git@github.com:deter-project/testbed.git',   
             dest: '/space/deter/testbed',
-            version: 'hotfix' }
+            version: 'development' }
         - { repo: 'git@github.com:deter-project/deterboot.git', 
             dest: '/space/deter/deterboot',
             version: 'master' }
