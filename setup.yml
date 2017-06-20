@@ -86,11 +86,7 @@
         - rvn.pub
 
     - name: set private key permissions
-      file:
-        path: /var/rvn/ssh/rvn
-        group: root
-        owner: root
-        mode: 0600
+      command: chmod 0600 /var/rvn/ssh/rvn
 
     - name: set up gopath
       lineinfile:
