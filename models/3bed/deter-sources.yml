@@ -27,6 +27,12 @@
         - { repo: 'git@github.com:rcgoodfellow/walrustf.git', 
             dest: '/space/walrustf',
             version: 'master' }
+        - { repo: 'git@github.com:rcgoodfellow/netlink.git', 
+            dest: '/space/netlink',
+            version: 'master' }
+        - { repo: 'git@github.com:rcgoodfellow/agx.git', 
+            dest: '/space/agx',
+            version: 'master' }
 
     - command: chmod g+w -R /space
 
