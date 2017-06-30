@@ -580,3 +580,20 @@ func allowBOOTP(net *libvirt.Network) {
 	}
 
 }
+
+func Reboot(rr RebootRequest) error {
+	checkConnect()
+
+	for _, x := range rr.Nodes {
+
+		d, err := conn.LookupDomainByName(fmt.Sprintf("%s_%s", rr.Topo, x))
+		if err != nil {
+			continue
+		}
+		d.Reset(0)
+
+	}
+
+	return nil
+
+}

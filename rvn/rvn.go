@@ -202,3 +202,8 @@ func (r *Runtime) FreeSubnet(tag string) {
 	delete(r.SubnetReverseTable, tag)
 	r.Save()
 }
+
+type RebootRequest struct {
+	Topo  string   `json:"topo"`
+	Nodes []string `json:"nodes"`
+}

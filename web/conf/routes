@@ -14,6 +14,7 @@ GET     /rvn-destroy                            App.Destroy
 GET     /rvn-launch                             App.Launch
 POST    /rvn-mount                              App.Mount
 GET     /rvn-configure                          App.Configure
+POST    /rvn-reboot                             App.Reboot
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

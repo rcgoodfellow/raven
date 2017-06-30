@@ -126,6 +126,29 @@ func (c App) Destroy() revel.Result {
 	return c.RenderText("ok")
 }
 
+func (c App) Reboot() revel.Result {
+
+	var rr rvn.RebootRequest
+	body, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil || len(body) == 0 {
+		log.Printf("%v", err)
+		c.Response.Status = 400
+		return c.RenderText("bad argument")
+	}
+
+	err = json.Unmarshal(body, &rr)
+	if err != nil {
+		log.Printf("%v", err)
+		c.Response.Status = 400
+		return c.RenderText("bad argument")
+	}
+
+	rvn.Reboot(rr)
+
+	c.Response.Status = 200
+	return c.RenderText("ok")
+}
+
 func (c App) Launch() revel.Result {
 	topo := c.Params.Query.Get("topo")
 	log.Printf("launch: topo=%s", topo)
