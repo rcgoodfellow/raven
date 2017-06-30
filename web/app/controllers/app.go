@@ -6,7 +6,6 @@ import (
 	"github.com/rcgoodfellow/raven/rvn"
 	"github.com/revel/revel"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"os/exec"
 )
@@ -56,13 +55,13 @@ func (c App) Index() revel.Result {
 
 func (c App) Push() revel.Result {
 	var topo rvn.Topo
-	body, _ := ioutil.ReadAll(c.Request.Body)
-	if len(body) == 0 {
+    log.Println("push")
+    err := c.Params.BindJSON(&topo)
+    if err != nil {
+        log.Printf("invalid push request")
 		c.Response.Status = 400
 		return c.RenderText("bad argument")
-	}
-
-	json.Unmarshal(body, &topo)
+    }
 	rvn.Create(topo)
 	c.Response.Status = 200
 	return c.RenderText("ok")
@@ -70,12 +69,12 @@ func (c App) Push() revel.Result {
 
 func (c App) Mount() revel.Result {
 	var topo rvn.Topo
-	body, _ := ioutil.ReadAll(c.Request.Body)
-	if len(body) == 0 {
+    err := c.Params.BindJSON(&topo)
+    if err != nil {
+        log.Printf("invalid mount request")
 		c.Response.Status = 400
 		return c.RenderText("bad argument")
-	}
-	json.Unmarshal(body, &topo)
+    }
 	rvn.ExportNFS(topo)
 	rvn.GenConfigAll(topo)
 	c.Response.Status = 200
