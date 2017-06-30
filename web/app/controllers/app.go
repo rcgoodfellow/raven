@@ -55,13 +55,13 @@ func (c App) Index() revel.Result {
 
 func (c App) Push() revel.Result {
 	var topo rvn.Topo
-    log.Println("push")
-    err := c.Params.BindJSON(&topo)
-    if err != nil {
-        log.Printf("invalid push request")
+	log.Println("push")
+	err := c.Params.BindJSON(&topo)
+	if err != nil {
+		log.Printf("invalid push request")
 		c.Response.Status = 400
 		return c.RenderText("bad argument")
-    }
+	}
 	rvn.Create(topo)
 	c.Response.Status = 200
 	return c.RenderText("ok")
@@ -69,12 +69,12 @@ func (c App) Push() revel.Result {
 
 func (c App) Mount() revel.Result {
 	var topo rvn.Topo
-    err := c.Params.BindJSON(&topo)
-    if err != nil {
-        log.Printf("invalid mount request")
+	err := c.Params.BindJSON(&topo)
+	if err != nil {
+		log.Printf("invalid mount request")
 		c.Response.Status = 400
 		return c.RenderText("bad argument")
-    }
+	}
 	rvn.ExportNFS(topo)
 	rvn.GenConfigAll(topo)
 	c.Response.Status = 200
@@ -128,14 +128,10 @@ func (c App) Destroy() revel.Result {
 func (c App) Reboot() revel.Result {
 
 	var rr rvn.RebootRequest
-	body, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil || len(body) == 0 {
-		log.Printf("%v", err)
-		c.Response.Status = 400
-		return c.RenderText("bad argument")
-	}
+	log.Println("reboot")
 
-	err = json.Unmarshal(body, &rr)
+	err := c.Params.BindJSON(&rr)
+
 	if err != nil {
 		log.Printf("%v", err)
 		c.Response.Status = 400
