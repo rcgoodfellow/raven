@@ -70,3 +70,6 @@
     - name: clear default vlan from leaf
       shell: /usr/testbed/bin/dsnmp leaf vlan 1 clear-all
 
+      #- name: Commission nodes
+      #command: /usr/testbed/sbin/commissioner /tmp/config/nodetypes.json
+

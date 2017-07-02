@@ -15,6 +15,8 @@ replace into node_type_attributes values
   ('qnode', 'control_network', 0, 'integer'),
   ('qnode', 'default_imageid',
     (select osid from os_info where osname='Ubuntu1604-STD'), 'integer'),
+  ('qnode', 'default_osid',
+    (select osid from os_info where osname='Ubuntu1604-STD'), 'integer'),
   ('qnode', 'delay_capacity', 0, 'integer'),
   ('qnode', 'diskloadmfs_osid',
     (select osid from os_info where osname='linux-mfs'), 'integer'),

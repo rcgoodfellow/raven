@@ -287,7 +287,30 @@ type DomStatus struct {
 	State       string
 	ConfigState string
 	IP          string
+	Macs        []string
 	VNC         int
+}
+
+func DomainInfo(topo, name string) (*xlibvirt.Domain, error) {
+
+	checkConnect()
+	dom, err := conn.LookupDomainByName(topo + "_" + name)
+	if err != nil {
+		return nil, err
+	}
+	xmldoc, err := dom.GetXMLDesc(0)
+	if err != nil {
+		return nil, err
+	}
+
+	xdom := &xlibvirt.Domain{}
+	err = xdom.Unmarshal(xmldoc)
+	if err != nil {
+		return nil, err
+	}
+
+	return xdom, nil
+
 }
 
 // The status function returns the runtime status of a topology, node by node
@@ -454,11 +477,19 @@ func domainStatus(
 			status.State = "running"
 			addrs, err := x.ListAllInterfaceAddresses(
 				libvirt.DOMAIN_INTERFACE_ADDRESSES_SRC_LEASE)
-			if err == nil && len(addrs) > 0 {
-				ifx := addrs[0]
-				if len(ifx.Addrs) > 0 {
-					status.IP = ifx.Addrs[0].Addr
+			if err == nil {
+
+				for _, a := range addrs {
+					status.Macs = append(status.Macs, a.Hwaddr)
 				}
+
+				if len(addrs) > 0 {
+					ifx := addrs[0]
+					if len(ifx.Addrs) > 0 {
+						status.IP = ifx.Addrs[0].Addr
+					}
+				}
+
 			}
 			status.ConfigState = configStatus(topo, name)
 		case libvirt.DOMAIN_BLOCKED:

@@ -142,6 +142,7 @@
       with_items:
         - go-rvn-ssh
         - go-rvn-ansible
+        - rvn-cli
     
     - name: install rvn-ssh
       copy:
@@ -152,6 +153,13 @@
       with_items:
         - rvn-ssh
         - go-rvn-ssh
+        - rvn-cli
+
+    - name: link rvn
+      file:
+        src: /usr/local/bin/rvn-cli
+        dest: /usr/local/bin/rvn
+        state: link
 
     - name: install rvn-ansible
       copy:
