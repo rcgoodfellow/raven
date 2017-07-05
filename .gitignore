@@ -21,3 +21,6 @@
 
 runsync.sh
 *.retry
+
+## raven working directories
+.rvn

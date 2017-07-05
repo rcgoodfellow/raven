@@ -36,15 +36,19 @@
 
   tasks:
     - name: create virtual path
-      command: /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 4 set access 2001
+      shell: sleep 4 && /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 4 set access 2001
+      async: 3600
+      poll: 0
       tags:
         - vpath-create
     
     - name: destroy virtual path
-      command: "{{item}}"
+      shell: "{{item}}"
+      async: 3600
+      poll: 0
       tags:
         - vpath-destroy
       with_items:
-        - /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 4 clear
-        - /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 set access 3
-        - /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 4 set access 4
+        - sleep 7 && /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 4 clear
+        - sleep 7 && /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 3 set access 3
+        - sleep 7 && /opt/switch-drivers/snmp/apps/snmp nimbus vlan port 4 set access 4

@@ -43,6 +43,7 @@
       file: path={{item.path}} state={{item.state}}
       with_items:
         - {path: /var/rvn/img, state: directory}
+        - {path: /var/rvn/template, state: directory}
         - {path: /var/rvn/run, state: touch}
         - {path: /var/rvn/ssh, state: directory}
         - {path: /var/rvn/util, state: directory}
@@ -71,7 +72,21 @@
       with_items:
         - rvn
         - rvn.pub
-    
+   
+    #TODO untested
+    - name: install text templates
+      copy: src={{playbook_dir}}/rvn/{{item}} dest=/var/rvn/template/{{item}}
+      with_items:
+        - config.yml
+        - sys.exports
+
+    # ensure icmp from userspace applications works
+    - lineinfile:
+        dest: /etc/sysctl.conf
+        line: net.ipv4.ping_group_range="0   2147483647"
+
+    - command: sysctl -p
+    #TODO end untested
 
     - name: install javascript libraries
       copy: src={{item.src}} dest=/usr/local/lib/rvn/{{item.dest}}
@@ -126,6 +141,7 @@
         - github.com/libvirt/libvirt-go-xml
         - github.com/revel/cmd/revel
         - github.com/go-redis/redis
+        - github.com/sparrc/go-ping
 
     - name: link raven dir into gopath
       file:
@@ -175,3 +191,6 @@
       with_items:
         - iamme-linux
         - iamme-freebsd
+
+    - name: allow ping from go
+      command: sysctl -w net.ipv4.ping_group_range="0   2147483647"

@@ -42,7 +42,7 @@ func main() {
 	}
 
 	//read the topology file
-	topo, err := rvn.LoadTopo(os.Args[1])
+	topo, err := rvn.LoadTopoFile(os.Args[1])
 	if err != nil {
 		log.Fatalf("failed to load topo %v", err)
 	}

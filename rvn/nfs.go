@@ -50,7 +50,7 @@ func ExportNFS(topo Topo) error {
 	}
 
 	//run the exports template
-	tp_path, err := filepath.Abs("../rvn/sys.exports")
+	tp_path, err := filepath.Abs("/var/rvn/template/sys.exports")
 	if err != nil {
 		err = fmt.Errorf("failed to create absolute path for sys.exports - %v", err)
 		log.Printf("%v", err)
@@ -62,7 +62,14 @@ func ExportNFS(topo Topo) error {
 		log.Printf("%v", err)
 		return err
 	}
-	path := fmt.Sprintf("/%s/%s/%s.exports", SysDir(), topo.Name, topo.Name)
+
+	wd, err := WkDir()
+	if err != nil {
+		log.Printf("exportnfs: failed to get working dir")
+		return err
+	}
+
+	path := fmt.Sprintf("/%s/%s.exports", wd, topo.Name)
 	f, err := os.Create(path)
 	if err != nil {
 		err = fmt.Errorf("failed to create path %s - %v", path, err)
