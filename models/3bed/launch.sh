@@ -78,6 +78,7 @@ chatper "commissioning"
   echo "rebooting testbed nodes so boss picks them up"
   rvn reboot   n0 n1 n2
 
+  ##TODO you are here --- time to start the deter API
   echo "waiting for testbed nodes to come up as new nodes"
   cnt=$(deter newnodes count)
   while [[ "$cnt" -lt "3" ]]; do
