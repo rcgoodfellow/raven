@@ -10,7 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
+	//"time"
 )
 
 var conn *libvirt.Connect
@@ -34,15 +34,15 @@ func isAlive() bool {
 
 func checkConnect() {
 	for conn == nil {
-		log.Printf("connection nil - reconnecting")
+		//log.Printf("connection nil - reconnecting")
 		connect()
-		time.Sleep(1 * time.Second)
+		//time.Sleep(1 * time.Millisecond)
 	}
 
 	for !isAlive() {
-		log.Printf("connection dead - reconnecting")
+		//log.Printf("connection dead - reconnecting")
 		connect()
-		time.Sleep(100 * time.Millisecond)
+		//time.Sleep(1 * time.Millisecond)
 	}
 }
 
@@ -56,8 +56,23 @@ func checkConnect() {
 // launch the system. For that functionality use the Launch function. If a
 // topology with the same name as the topology provided as an argument exists,
 // that topology will be overwritten by the system generated from the argument.
-func Create(topo Topo) {
-	topoDir := SysDir() + "/" + topo.Name
+
+//TODO need to return an error if shizz goes sideways
+func Create() {
+
+	wd, err := WkDir()
+	if err != nil {
+		log.Printf("create: failed to get working dir")
+		return
+	}
+
+	topo, err := loadTopo()
+	if err != nil {
+		log.Printf("create failed to load topo")
+		return
+	}
+
+	topoDir := wd
 	os.MkdirAll(topoDir, 0755)
 
 	doms := make(map[string]*xlibvirt.Domain)
@@ -93,7 +108,6 @@ func Create(topo Topo) {
 
 	for _, node := range topo.Nodes {
 		d := newDom(&node.Host, &topo)
-		runHooks(d)
 		GenConfig(node.Host, topo)
 		doms[node.Name] = d
 		domConnect(topo.QualifyName("test"), &node.Host, d, nil)
@@ -101,7 +115,6 @@ func Create(topo Topo) {
 
 	for _, zwitch := range topo.Switches {
 		d := newDom(&zwitch.Host, &topo)
-		runHooks(d)
 		GenConfig(zwitch.Host, topo)
 		doms[zwitch.Name] = d
 		domConnect(topo.QualifyName("test"), &zwitch.Host, d, nil)
@@ -122,7 +135,7 @@ func Create(topo Topo) {
 	}
 
 	data, _ := json.MarshalIndent(topo, "", "  ")
-	ioutil.WriteFile(topoDir+"/"+topo.Name+".json", []byte(data), 0644)
+	ioutil.WriteFile(topoDir+"/topo.json", []byte(data), 0644)
 
 	checkConnect()
 
@@ -170,26 +183,35 @@ func Create(topo Topo) {
 // Destroy completely wipes out a topology with the given name. If the system
 // is running within libvirt it is torn down. The entire definition of the
 // system is also removed from libvirt.
-func Destroy(topoName string) {
+
+//TODO return error on sideways
+func Destroy() {
 	checkConnect()
 	dbCheckConnection()
 
-	topo, err := loadTopo(topoName)
+	wd, err := WkDir()
 	if err != nil {
-		log.Printf("destroy: failed to load topo %s", topoName)
+		log.Printf("newdom: failed to get working dir")
 		return
 	}
-	topoDir := SysDir() + "/" + topo.Name
+
+	topo, err := loadTopo()
+	if err != nil {
+		//log.Printf("destroy: failed to load topo - %v", err)
+		//nothing to destroy
+		return
+	}
+	topoDir := wd
 	exec.Command("rm", "-rf", topoDir).Run()
 
 	for _, x := range topo.Nodes {
 		destroyDomain(topo.QualifyName(x.Name), conn)
-		state_key := fmt.Sprintf("config_state:%s:%s", topoName, x.Name)
+		state_key := fmt.Sprintf("config_state:%s:%s", topo.Name, x.Name)
 		db.Del(state_key)
 	}
 	for _, x := range topo.Switches {
 		destroyDomain(topo.QualifyName(x.Name), conn)
-		state_key := fmt.Sprintf("config_state:%s:%s", topoName, x.Name)
+		state_key := fmt.Sprintf("config_state:%s:%s", topo.Name, x.Name)
 		db.Del(state_key)
 	}
 
@@ -198,7 +220,35 @@ func Destroy(topoName string) {
 	}
 	destroyNetwork(topo.QualifyName("test"), conn)
 	LoadRuntime().FreeSubnet(topo.Name)
-	UnexportNFS(topoName)
+	UnexportNFS(topo.Name)
+}
+
+func Shutdown() []error {
+	checkConnect()
+	dbCheckConnection()
+
+	topo, err := loadTopo()
+	if err != nil {
+		return []error{fmt.Errorf("shutdown: failed to load topo")}
+	}
+
+	errs := []error{}
+	for _, x := range topo.Nodes {
+		err := shutdownDomain(topo.QualifyName(x.Name), conn)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+	for _, x := range topo.Switches {
+		err := shutdownDomain(topo.QualifyName(x.Name), conn)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) > 0 {
+		return errs
+	}
+	return nil
 }
 
 // Launch brings up the system with the given name. This system must exist
@@ -208,12 +258,14 @@ func Destroy(topoName string) {
 // an error in launching. This function is asynchronous, when it returns the
 // system is still launching. Use the Status function to check up on a the
 // launch process.
-func Launch(topoName string) []string {
+
+//TODO name should probably be something more like 'deploy'
+func Launch() []string {
 	checkConnect()
 
-	topo, err := loadTopo(topoName)
+	topo, err := loadTopo()
 	if err != nil {
-		err := fmt.Errorf("failed to load topo %s - %v", topoName, err)
+		err := fmt.Errorf("failed to load topo %v", err)
 		return []string{fmt.Sprintf("%v", err)}
 	}
 
@@ -258,24 +310,30 @@ func Launch(topoName string) []string {
 	}
 
 	for _, net := range nets {
-		err := net.Create()
-		name, _ := net.GetName()
-		if err != nil {
-			errors = append(errors, fmt.Sprintf("%s: %v", name, err))
+		active, err := net.IsActive()
+		if err == nil && !active {
+			err := net.Create()
+			name, _ := net.GetName()
+			if err != nil {
+				errors = append(errors, fmt.Sprintf("%s: %v", name, err))
+			}
+			if name != topo.QualifyName("test") {
+				setBridgeProperties(net)
+			}
+			net.Free()
 		}
-		if name != topo.QualifyName("test") {
-			setBridgeProperties(net)
-		}
-		net.Free()
 	}
 
 	for _, dom := range doms {
-		err := dom.Create()
-		if err != nil {
-			name, _ := dom.GetName()
-			errors = append(errors, fmt.Sprintf("%s: %v", name, err))
+		active, err := dom.IsActive()
+		if err == nil && !active {
+			err := dom.Create()
+			if err != nil {
+				name, _ := dom.GetName()
+				errors = append(errors, fmt.Sprintf("%s: %v", name, err))
+			}
+			dom.Free()
 		}
-		dom.Free()
 	}
 
 	return errors
@@ -284,6 +342,7 @@ func Launch(topoName string) []string {
 // DomStatus encapsulates various information about a libvirt domain for
 // purposes of serialization and presentation.
 type DomStatus struct {
+	Name        string
 	State       string
 	ConfigState string
 	IP          string
@@ -315,16 +374,16 @@ func DomainInfo(topo, name string) (*xlibvirt.Domain, error) {
 
 // The status function returns the runtime status of a topology, node by node
 // and network by network.
-func Status(topoName string) map[string]interface{} {
+func Status() map[string]interface{} {
 
 	status := make(map[string]interface{})
 
 	checkConnect()
 
-	topo, err := loadTopo(topoName)
+	topo, err := loadTopo()
 	if err != nil {
-		log.Printf("status: failed to load topo %s - %v", topoName, err)
-		return status
+		log.Printf("status: failed to load topo - %v", err)
+		return nil
 	}
 
 	nodes := make(map[string]DomStatus)
@@ -338,18 +397,18 @@ func Status(topoName string) map[string]interface{} {
 
 	for _, x := range topo.Nodes {
 		nodes[x.Name] =
-			domainStatus(topoName, x.Name, topo.QualifyName(x.Name), conn)
+			domainStatus(topo.Name, x.Name, topo.QualifyName(x.Name), conn)
 	}
 	for _, x := range topo.Switches {
 		switches[x.Name] =
-			domainStatus(topoName, x.Name, topo.QualifyName(x.Name), conn)
+			domainStatus(topo.Name, x.Name, topo.QualifyName(x.Name), conn)
 	}
 
 	for _, x := range topo.Links {
 		links[x.Name] = networkStatus(topo.QualifyName(x.Name), conn)
 	}
 
-	subnet, ok := LoadRuntime().SubnetReverseTable[topoName]
+	subnet, ok := LoadRuntime().SubnetReverseTable[topo.Name]
 	if ok {
 		status["mgmtip"] = fmt.Sprintf("172.22.%d.1", subnet)
 	}
@@ -365,8 +424,14 @@ func Status(topoName string) map[string]interface{} {
 
 func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 
+	wd, err := WkDir()
+	if err != nil {
+		log.Printf("newdom: failed to get working dir")
+		return nil
+	}
+
 	baseImage := "/var/rvn/img/" + h.Image + ".qcow2"
-	instanceImage := SysDir() + "/" + t.Name + "/" + h.Name + ".qcow2"
+	instanceImage := wd + "/" + h.Name + ".qcow2"
 	exec.Command("rm", "-f", instanceImage).Run()
 
 	out, err := exec.Command(
@@ -393,7 +458,7 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 		OS: &xlibvirt.DomainOS{
 			Type: &xlibvirt.DomainOSType{Type: "hvm"},
 		},
-		Memory: &xlibvirt.DomainMemory{Value: 1024, Unit: "MiB"},
+		Memory: &xlibvirt.DomainMemory{Value: 4096, Unit: "MiB"},
 		Devices: &xlibvirt.DomainDeviceList{
 			Serials: []xlibvirt.DomainSerial{
 				xlibvirt.DomainSerial{
@@ -456,15 +521,23 @@ func domConnect(
 		})
 }
 
-func loadTopo(name string) (Topo, error) {
-	topoDir := SysDir() + "/" + name
-	path := topoDir + "/" + name + ".json"
-	return LoadTopo(path)
+func loadTopo() (Topo, error) {
+
+	/*
+		topoDir := SysDir() + "/" + name
+		path := topoDir + "/" + name + ".json"
+	*/
+
+	return LoadTopo()
+
 }
 
 func domainStatus(
-	topo, name, qname string, conn *libvirt.Connect) DomStatus {
+	topo, name, qname string, conn *libvirt.Connect,
+) DomStatus {
+
 	var status DomStatus
+	status.Name = name
 	x, err := conn.LookupDomainByName(qname)
 	if err != nil {
 		status.State = "non-existant"
@@ -553,6 +626,21 @@ func destroyDomain(name string, conn *libvirt.Connect) {
 	}
 }
 
+func shutdownDomain(name string, conn *libvirt.Connect) error {
+	x, err := conn.LookupDomainByName(name)
+	if err != nil {
+		return fmt.Errorf("request to shutdown unknown vm %s", name)
+	} else {
+		x.ShutdownFlags(libvirt.DOMAIN_SHUTDOWN_ACPI_POWER_BTN)
+		active, err := x.IsActive()
+		if err == nil && active {
+			log.Printf("shutting down %s", name)
+			return x.Shutdown()
+		}
+		return err
+	}
+}
+
 func destroyNetwork(name string, conn *libvirt.Connect) {
 	x, err := conn.LookupNetworkByName(name)
 	if err != nil {
@@ -615,13 +703,25 @@ func allowBOOTP(net *libvirt.Network) {
 func Reboot(rr RebootRequest) error {
 	checkConnect()
 
+	topo, err := LoadTopo()
+	if err != nil {
+		return err
+	}
+
 	for _, x := range rr.Nodes {
 
 		d, err := conn.LookupDomainByName(fmt.Sprintf("%s_%s", rr.Topo, x))
 		if err != nil {
 			continue
 		}
-		d.Reset(0)
+
+		//seabios is not responsive to a reboot request, have to pull the plug
+		h := topo.getHost(x)
+		if h != nil && h.OS == "netboot" {
+			d.Reset(0)
+		} else {
+			d.Reboot(libvirt.DOMAIN_REBOOT_DEFAULT)
+		}
 
 	}
 

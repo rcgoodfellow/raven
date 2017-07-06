@@ -1,8 +1,0 @@
-#!/bin/bash
-
-cmd=$(go-rvn-ssh $@)
-if [ $? == 0 ]; then
-  eval $cmd
-else
-  echo $cmd
-fi

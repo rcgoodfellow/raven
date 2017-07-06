@@ -33,7 +33,7 @@
     - name: update libvirt dns
       command: /usr/local/bin/iamme eth0 {{.NFS}}
       when: ostype.stdout == "Linux"
-    
+
     #
     #- name: update libvirt dns
     #  command: /usr/local/bin/iamme vtnet0 {{.NFS}}

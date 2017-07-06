@@ -1,8 +1,0 @@
----
-
-- hosts: users
-
-  tasks:
-    - name: define experiment
-
-    - name: launch experiment

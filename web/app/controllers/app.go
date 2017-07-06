@@ -33,6 +33,7 @@ func (c App) Index() revel.Result {
 		return c.RenderText("please provide a working directory")
 	}
 
+	//XXX use rvn.RunModel()
 	out, err := exec.Command(
 		"nodejs",
 		"/usr/local/lib/rvn/run_model.js",

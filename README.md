@@ -45,16 +45,6 @@ topo = {
   'links': links
 };
 ```
-This file looks like the following when uploaded through the web interface
-<br />
-<br />
-<img src='http://mirror.deterlab.net/rvn/doc/2net-web.png' width="600" />
-
-Use the push, destroy,, launch, mount and configure buttons to realize, configure and work with your code inside a virtual realization of the environment model. 
-
-<!--
-See [this article](http://dev.goodwu.net/distributed-systems/testing/networking/infrastructure/2017/05/26/distributed-walrus.html)for a more complete tutorial.
--->
 
 ## Getting started
 I have tested Raven on Debian-Stretch and Ubuntu 16.04. Contributions to support other distros welcome!
@@ -74,18 +64,29 @@ First start the raven application (you must be root due to the way we use libvir
 
 ```shell
 sudo su
-cd $GOPATH:/src/github.com/rcgoodfellow/raven/web
-revel run
+cd raven/models/2net
+
+# build the raven system (creates virtual machines and network descriptions)
+rvn build
+
+# deploy the virtual system
+rvn deploy
+
+# show the status of the virtual nodes
+rvn status
+
+# wait for the virtual nodes and switches to come up
+rvn pingwait control walrus nimbus n0 n1
+
+# configure the virtual nodes and switches
+rvn configure
+
+# run some ad-hoc config on a node
+rvn ansible n1 $MYCONFIG/mysetup.yml
+
+# ssh into a node
+eval $(rvn ssh walrus)
 ```
 
-Then open up a web browser using a path to a raven directoy. Raven itself comes with a few. Try 
-```
-http://localhost:9000/?dir=/space/raven/models/2net
-```
-for starters. To access virtual machines you can use the `rvn-ssh` command for example
-
-```shell
-rvn-ssh 2net n0
-```
-Raven also comes with the `rvn-ansible` command for launching ansible playbooks against virtual machines in a convinient ad-hoc nature.
-
+### Web Interface
+Not functional at the moment until I get back to syncing the web code with the recent revamp.

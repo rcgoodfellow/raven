@@ -3,44 +3,58 @@ package rvn
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-redis/redis"
 	"io/ioutil"
 	"log"
-	"os/user"
-	"time"
+	"os"
+	"os/exec"
 )
 
-var db *redis.Client
+// @@@ Api %%% ----------------------------------------------------------------
 
-func dbConnect() {
-	db = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-	})
-	if db == nil {
-		log.Fatal("failed to connect to db")
-	}
-}
+func RunModel() error {
 
-func dbAlive() bool {
-	_, err := db.Ping().Result()
+	// execute the javascript model
+	out, err := exec.Command(
+		"nodejs",
+		"/usr/local/lib/rvn/run_model.js",
+		"model.js",
+	).CombinedOutput()
+
 	if err != nil {
-		log.Printf("ping db failed")
-		return false
-	}
-	return true
-}
-
-func dbCheckConnection() {
-	for db == nil {
-		dbConnect()
-		time.Sleep(1 * time.Second)
+		log.Printf("error running model")
+		log.Printf(string(out))
+		return err
 	}
 
-	for !dbAlive() {
-		dbConnect()
-		time.Sleep(100 * time.Millisecond)
+	// save the result of the model execution in the working directory
+	topo, err := ReadTopo(out)
+	if err != nil {
+		log.Printf("error reading topo %v", err)
+		return err
 	}
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Printf("cannot determine working directory %v", err)
+		return err
+	}
+	topo.Dir = wd
+
+	buf, err := json.MarshalIndent(topo, "", "  ")
+	if err != nil {
+		log.Printf("error marshalling topo %v", err)
+		return err
+	}
+
+	err = ioutil.WriteFile(".rvn/topo.json", buf, 0644)
+	if err != nil {
+		log.Printf("error writing topo %v", err)
+	}
+
+	return nil
+
 }
+
+// @@@ Types $$$ --------------------------------------------------------------
 
 type Mount struct {
 	Point  string `json:"point"`
@@ -97,19 +111,40 @@ func (t *Topo) getHost(name string) *Host {
 	return nil
 }
 
-func LoadTopo(path string) (Topo, error) {
+func LoadTopo() (Topo, error) {
+
+	wd, err := WkDir()
+	if err != nil {
+		log.Printf("loadtopo: could not determine working directory")
+		return Topo{}, err
+	}
+
+	path := wd + "/topo.json"
+	return LoadTopoFile(path)
+}
+
+func LoadTopoFile(path string) (Topo, error) {
+
 	f, err := ioutil.ReadFile(path)
 	if err != nil {
 		return Topo{}, err
 	}
-	return ReadTopo(f), nil
+	topo, err := ReadTopo(f)
+	if err != nil {
+		return Topo{}, err
+	}
+	return topo, nil
+
 }
 
+/*
 func LoadTopoByName(system string) (Topo, error) {
 	path := fmt.Sprintf("%s/%s/%s.json", SysDir(), system, system)
 	return LoadTopo(path)
 }
+*/
 
+/*
 func SysDir() string {
 	u, err := user.Current()
 	if err != nil {
@@ -117,11 +152,30 @@ func SysDir() string {
 	}
 	return u.HomeDir + "/.rvn/systems"
 }
+*/
 
-func ReadTopo(src []byte) Topo {
+func WkDir() (string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Printf("wkdir: could not determine working directory %v", err)
+		return "", err
+	}
+	return wd + "/.rvn", nil
+}
+
+func SrcDir() (string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Printf("srcdir: could not determine working directory %v", err)
+		return "", err
+	}
+	return wd, nil
+}
+
+func ReadTopo(src []byte) (Topo, error) {
 	var topo Topo
-	json.Unmarshal(src, &topo)
-	return topo
+	err := json.Unmarshal(src, &topo)
+	return topo, err
 }
 
 func (t Topo) QualifyName(n string) string {
@@ -197,10 +251,12 @@ func (r *Runtime) AllocateSubnet(tag string) int {
 }
 
 func (r *Runtime) FreeSubnet(tag string) {
-	i := r.SubnetReverseTable[tag]
-	r.SubnetTable[i] = false
-	delete(r.SubnetReverseTable, tag)
-	r.Save()
+	i, ok := r.SubnetReverseTable[tag]
+	if ok {
+		r.SubnetTable[i] = false
+		delete(r.SubnetReverseTable, tag)
+		r.Save()
+	}
 }
 
 type RebootRequest struct {

@@ -21,7 +21,7 @@ func GenConfigAll(topo Topo) {
 }
 
 func GenConfig(h Host, topo Topo) {
-	tp_path, err := filepath.Abs("../rvn/config.yml")
+	tp_path, err := filepath.Abs("/var/rvn/template/config.yml")
 	if err != nil {
 		log.Printf("failed to create absolute path for config.yml - %v", err)
 		return
@@ -32,7 +32,13 @@ func GenConfig(h Host, topo Topo) {
 		return
 	}
 
-	path := fmt.Sprintf("/%s/%s/%s.yml", SysDir(), topo.Name, h.Name)
+	wd, err := WkDir()
+	if err != nil {
+		log.Printf("genconfig: failed to get working dir")
+		return
+	}
+
+	path := fmt.Sprintf("/%s/%s.yml", wd, h.Name)
 	f, err := os.Create(path)
 	if err != nil {
 		log.Printf("failed to create path %s - %v", path, err)
@@ -51,20 +57,27 @@ func GenConfig(h Host, topo Topo) {
 	}
 }
 
-func Configure(topoName string, withUserConfig bool) {
-	topo, err := loadTopo(topoName)
+//TODO errors anyone!!
+func Configure(withUserConfig bool) {
+	topo, err := loadTopo()
 	if err != nil {
-		log.Println("configure: failed to load topo %s - %v", topoName, err)
+		log.Println("configure: failed to load topo - %v", err)
 		return
 	}
 	preConfigure(topo)
-	status := Status(topo.Name)
+	status := Status()
 	node_status := status["nodes"].(map[string]DomStatus)
 	switch_status := status["switches"].(map[string]DomStatus)
 
+	wd, err := WkDir()
+	if err != nil {
+		log.Printf("configure: failed to get working dir")
+		return
+	}
+
 	var wg sync.WaitGroup
 	doConfig := func(topo Topo, host Host, ds DomStatus) {
-		yml := fmt.Sprintf("%s/%s/%s.yml", SysDir(), topo.Name, host.Name)
+		yml := fmt.Sprintf("%s/%s.yml", wd, host.Name)
 		log.Printf("running base config for %s:%s", topo.Name, host.Name)
 		runConfig(yml, topo.Name, host, ds)
 
@@ -100,10 +113,15 @@ func preConfigure(topo Topo) {
 	if _, err := os.Stat(pc_script); err == nil {
 		log.Printf("running pre-config for %s", topo.Name)
 
+		wd, err := WkDir()
+		if err != nil {
+			log.Printf("preconfigure: failed to get working dir")
+			return
+		}
+
 		cmd := exec.Command(pc_script)
 		env := os.Environ()
-		cmd.Env = append(env,
-			fmt.Sprintf("TOPOJSON=%s/%s/%s.json", SysDir(), topo.Name, topo.Name))
+		cmd.Env = append(env, fmt.Sprintf("TOPOJSON=%s/topo.json", wd))
 		cmd.Dir = fmt.Sprintf("%s/pre-config", topo.Dir)
 		out, err := cmd.CombinedOutput()
 		if err != nil {
