@@ -3,7 +3,8 @@ const vm = require('vm');
 
 const modeling_src = fs.readFileSync('/usr/local/lib/rvn/modeling.js', 'utf8');
 const modeling_script = new vm.Script(modeling_src);
-const ctx = new vm.createContext({});
+const sandbox = { env: process.env }
+const ctx = new vm.createContext(sandbox);
 modeling_script.runInContext(ctx);
 
 if(process.argv.length < 3) {

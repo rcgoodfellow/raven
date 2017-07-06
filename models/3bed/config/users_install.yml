@@ -4,4 +4,5 @@
 
   tasks:
 
-    - command: /tmp/config/build_install.sh
+    - name: Building and installing testbed
+      command: /tmp/config/build_install.sh

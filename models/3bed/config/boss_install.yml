@@ -4,13 +4,21 @@
 
   tasks:
 
-    - command: /tmp/config/build_install.sh
+    - name: Building and installing testbed
+      command: /tmp/config/build_install.sh
 
     #this has to be done b/c for some reason calling the ansible that is
     #running on fbsd from a linux host ansible that is presumably a different
     #version fails
-    - include: /space/deter/testbed/install/boss_post_install_tasks.yml 
+    - name: Running post install tasks
+      include: /space/deter/testbed/install/boss_post_install_tasks.yml 
       vars:
         objdir: /usr/testbed/obj 
         srcdir: /usr/testbed/src
         mirror: mirror.deterlab.net
+
+    - name: setting up api
+      include: /space/deter/testbed/core/api/setup_tasks.yml
+
+    - name: installing api
+      include: /space/deter/testbed/core/api/install_tasks.yml

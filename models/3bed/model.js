@@ -39,10 +39,10 @@ nodes = [
   ...Range(3).map(i => Node(`n${i}`, 3, [], 'netboot', 'netboot')),
   ...infra, router,
   Node('walrus', 
-    2, [{
-      'source': dirs.walrus,
-      'point': '/opt/walrus'
-    }],
+    2, [
+      { 'source': dirs.walrus, 'point': '/opt/walrus' },
+      configMount('walrus'),
+    ],
     'debian-stretch', 'linux'
   )
 ];

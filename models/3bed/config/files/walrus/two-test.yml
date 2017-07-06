@@ -1,8 +1,13 @@
 ---
-
 - hosts: users
 
   tasks:
     - name: define experiment
+      file:
+        state: touch
+        path: /tmp/def-xpt
 
     - name: launch experiment
+      file:
+        state: touch
+        path: /tmp/launch-xpt

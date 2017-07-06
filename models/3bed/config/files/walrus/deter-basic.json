@@ -1,0 +1,18 @@
+{
+  "name": "deter-basic",
+  "tests": [
+    {
+      "name": "two-launch",
+      "launch": "ansible-playbook two-test.yml",
+      "timeout": 3600,
+      "success": [
+        {"status": "ok", "who": "snmpit", "message": "vlan setup complete"},
+        {"status": "ok", "who": "topobot", "message": "two-test connectivity ok"}
+      ],
+      "fail": [
+        {"status": "error", "who": "*", "message": "*"}
+      ]
+    }
+  ]
+}
+

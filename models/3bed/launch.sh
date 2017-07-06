@@ -41,13 +41,14 @@ phase "deploying"
 # install users and reboot
 #
 phase "installing users"
-  echo "$BOLD go get coffee, this will take many moons $CLEAR"
+  echo -e "${BOLD}go get coffee, this will take many moons $CLEAR\n"
 
   echo "running users install script"
   rvn ansible  users config/users_install.yml
 
   echo "rebooting users"
   rvn reboot   users
+  sleep 10 #rvn reboot is signal based so need to wait for it to go away
 
   echo "waiting for users to come back on the network"
   rvn pingwait users
@@ -56,7 +57,7 @@ phase "installing users"
 # install/setup boss and reboot
 #
 phase "installing boss"
-  echo "$BOLD go get more coffee, this will take many moons $CLEAR"
+  echo -e "${BOLD}go get more coffee, this will take many more moons $CLEAR\n"
 
   echo "running boss install script"
   rvn ansible  boss config/boss_install.yml
@@ -66,6 +67,7 @@ phase "installing boss"
 
   echo "rebooting boss"
   rvn reboot   boss
+  sleep 20
 
   echo "waiting for boss to come back on the network"
   rvn pingwait boss
@@ -73,40 +75,41 @@ phase "installing boss"
 #
 # add the nodes to the testbed
 #
-chatper "commissioning"
+phase "commissioning"
 
   echo "rebooting testbed nodes so boss picks them up"
   rvn reboot   n0 n1 n2
 
-  ##TODO you are here --- time to start the deter API
+  ##TODO you are here --- time to start the deter admin API
+  deter_admin="deter-admin `rvn ip boss`"
   echo "waiting for testbed nodes to come up as new nodes"
-  cnt=$(deter newnodes count)
+  cnt=$($deter_admin newnodes | wc -l)
   while [[ "$cnt" -lt "3" ]]; do
     sleep 1
-    cnt=$(deter nodes count --where state=pxewait)
+    cnt=$($deter_admin newnodes | wc -l)
   done
 
   echo "commissioning new nodes"
-  rvn ansible  boss boss_3bed_commission.yml
+  rvn ansible  boss config/boss_3bed_commission.yml
 
   echo "rebooting testbed nodes"
   rvn reboot   n0 n1 n2
 
   echo "waiting for deter to image and free the testbed nodes"
-  cnt=$(deter nodes count --where state=pxewait)
+  cnt=$($deter_admin freenodes | wc -l)
   while [[ "$cnt" -lt "3" ]]; do
     sleep 1
-    cnt=$(deter nodes count --where state=pxewait)
+    cnt=$($deter_admin freenodes | wc -l)
   done
 
 #
 # run the testsuite from walrus ftw
 #
-chapter "testing"
+phase "testing"
 
   echo "launching test suite"
-  rvn ansible walrus deter_testsuite.yml
+  rvn ansible walrus config/deter_testsuite.yml
 
   # watch test suite progress
-  wtf -collector=`rvn ip walrus` watch config/files/walrus/tests.json
+  wtf -collector=`rvn ip walrus` watch config/files/walrus/deter-basic.json
 
