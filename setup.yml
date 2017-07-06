@@ -6,7 +6,7 @@
 
     - name: fetch nodejs repo setup script
       get_url:
-        url: https://deb.nodesource.com/setup_7.x
+        url: https://deb.nodesource.com/setup_8.x
         dest: /tmp/nodesetup
         mode: "a+x"
 
@@ -150,37 +150,16 @@
         state: link
     
     - name: build utility programs
-      shell: go build
+      shell: go build rvn.go
       args:
-        chdir: /root/.go/src/github.com/rcgoodfellow/raven/{{item}}
+        chdir: /root/.go/src/github.com/rcgoodfellow/raven/rvn-cli
       environment:
         GOPATH: /root/.go
-      with_items:
-        - go-rvn-ssh
-        - go-rvn-ansible
-        - rvn-cli
     
-    - name: install rvn-ssh
+    - name: install rvn-cli
       copy:
-        src: /root/.go/src/github.com/rcgoodfellow/raven/go-rvn-ssh/{{item}}
-        dest: /usr/local/bin/{{item}}
-        remote_src: true
-        mode: "a+x"
-      with_items:
-        - rvn-ssh
-        - go-rvn-ssh
-        - rvn-cli
-
-    - name: link rvn
-      file:
-        src: /usr/local/bin/rvn-cli
+        src: /root/.go/src/github.com/rcgoodfellow/raven/rvn-cli/rvn
         dest: /usr/local/bin/rvn
-        state: link
-
-    - name: install rvn-ansible
-      copy:
-        src: /root/.go/src/github.com/rcgoodfellow/raven/go-rvn-ansible/go-rvn-ansible
-        dest: /usr/local/bin/rvn-ansible
         remote_src: true
         mode: "a+x"
 
