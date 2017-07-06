@@ -1,8 +1,0 @@
----
-- hosts: all
-  become: true
-
-  tasks:
-
-    - name: Commission nodes
-      command: /usr/testbed/sbin/commissioner /tmp/config/nodetypes.json
