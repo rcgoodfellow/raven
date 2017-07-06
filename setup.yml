@@ -142,6 +142,7 @@
         - github.com/revel/cmd/revel
         - github.com/go-redis/redis
         - github.com/sparrc/go-ping
+        - github.com/fatih/color
 
     - name: link raven dir into gopath
       file:
