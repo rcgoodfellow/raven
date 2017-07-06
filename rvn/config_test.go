@@ -7,46 +7,81 @@ import (
 	"text/template"
 )
 
+type TpData struct {
+	Host Host
+	NFS  string
+}
+
 var testData = []struct {
-	Object   *Host
+	Object   *TpData
 	Expected []string
 }{
 	{
-		Object: &Host{
-			Name: "smooth-llama",
-			OS:   "debian-stretch",
-			Mounts: []Mount{
-				Mount{
-					Point:  "/opt/smooth",
-					Source: "/llama-src",
-					Tag:    "smooth-llama_opt_smooth",
+		Object: &TpData{
+			Host: Host{
+				Name: "smooth-llama",
+				OS:   "debian-stretch",
+				Mounts: []Mount{
+					Mount{
+						Point:  "/opt/smooth",
+						Source: "/llama-src",
+					},
 				},
 			},
+			NFS: "192.168.254.253",
 		},
 		Expected: []string{
-			`---`,
-			`- hosts: all`,
-			`  become: true`,
-			``,
-			`  tasks:`,
-			`    - name: set hostname`,
-			`      hostname:`,
-			`        name: smooth-llama`,
-			``,
-			`    - name: put hostname in /etc/hosts`,
-			`      lineinfile:`,
-			`        name: /etc/hosts`,
-			`        line: '127.0.0.1    smooth-llama'`,
-			``,
-			``,
-			`    - name: mount /opt/smooth`,
-			`      mount:`,
-			`        name: /opt/smooth`,
-			`        src: smooth-llama_opt_smooth`,
-			`        fstype: 9p`,
-			`        opts: trans=virtio,rw`,
-			`        state: mounted`,
-			``,
+			`---
+- hosts: all
+  become: true
+
+  tasks:
+    - name: determine os
+      command: uname -s
+      register: ostype
+
+    - name: copy utils
+      copy:
+        src: /var/rvn/util/iamme-linux
+        dest: /usr/local/bin/iamme
+        mode: "a+x"
+      when: ostype.stdout == "Linux"
+    
+    - name: copy utils
+      copy:
+        src: /var/rvn/util/iamme-freebsd
+        dest: /usr/local/bin/iamme
+        mode: "a+x"
+      when: ostype.stdout == "FreeBSD"
+
+    - name: set hostname
+      hostname:
+        name: smooth-llama 
+
+    - name: put hostname in /etc/hosts
+      lineinfile:
+        name: /etc/hosts
+        line: '127.0.0.1    smooth-llama'
+
+    - name: update libvirt dns
+      command: /usr/local/bin/iamme eth0 192.168.254.253
+      when: ostype.stdout == "Linux"
+    
+    #
+    #- name: update libvirt dns
+    #  command: /usr/local/bin/iamme vtnet0 192.168.254.253
+    #  when: ostype.stdout == "FreeBSD"
+
+
+    - name: mount /opt/smooth
+      mount:
+        name: /opt/smooth
+        src: 192.168.254.253:/llama-src
+        opts: rw,soft
+        fstype: nfs
+        state: mounted
+
+`,
 		},
 	},
 }

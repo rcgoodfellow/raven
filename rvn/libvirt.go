@@ -108,7 +108,6 @@ func Create() {
 
 	for _, node := range topo.Nodes {
 		d := newDom(&node.Host, &topo)
-		runHooks(d)
 		GenConfig(node.Host, topo)
 		doms[node.Name] = d
 		domConnect(topo.QualifyName("test"), &node.Host, d, nil)
@@ -116,7 +115,6 @@ func Create() {
 
 	for _, zwitch := range topo.Switches {
 		d := newDom(&zwitch.Host, &topo)
-		runHooks(d)
 		GenConfig(zwitch.Host, topo)
 		doms[zwitch.Name] = d
 		domConnect(topo.QualifyName("test"), &zwitch.Host, d, nil)
