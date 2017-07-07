@@ -46,6 +46,11 @@ func main() {
 			usage()
 		}
 		doIp(os.Args[2])
+	case "vnc":
+		if len(os.Args) < 3 {
+			usage()
+		}
+		doVnc(os.Args[2])
 	case "ansible":
 		if len(os.Args) < 4 {
 			usage()
@@ -163,6 +168,28 @@ func doIp(node string) {
 	}
 
 	fmt.Printf("%s\n", ds.IP)
+
+}
+
+func doVnc(node string) {
+
+	topo, err := rvn.LoadTopo()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	di, err := rvn.DomainInfo(topo.Name, node)
+	if err != nil {
+		fmt.Printf("error getting domain info %v\n", err)
+		os.Exit(1)
+	}
+
+	for _, x := range di.Devices.Graphics {
+		if x.Type == "vnc" {
+			fmt.Printf("%d\n", x.Port)
+			break
+		}
+	}
 
 }
 
@@ -356,6 +383,7 @@ func usage() {
 	)
 	s += fmt.Sprintf("  %s %s node\n", blue("rvn"), green("ssh"))
 	s += fmt.Sprintf("  %s %s node\n", blue("rvn"), green("ip"))
+	s += fmt.Sprintf("  %s %s node\n", blue("rvn"), green("vnc"))
 	s += fmt.Sprintf("  %s %s node script.yml\n", blue("rvn"), green("ansible"))
 	s += fmt.Sprintf("  %s %s node-1 ... node-n\n", blue("rvn"), green("reboot"))
 	s += fmt.Sprintf("  %s %s node-1 ... node-n", blue("rvn"), green("pingwait"))
