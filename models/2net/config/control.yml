@@ -44,3 +44,9 @@
         - github.com/fatih/color
         - github.com/garyburd/redigo/redis
         - github.com/soniah/gosnmp
+
+    - shell: go build snmp.go
+      environment:
+        GOPATH: /home/rvn/.go
+      args:
+        chdir: /opt/switch-drivers/snmp/apps/

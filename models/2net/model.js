@@ -29,8 +29,7 @@ controller = {
   'os': 'linux',
   'level': 1,
   'mounts': [
-    { 'source': env.SWITCHDIR, 'point': '/opt/switch-drivers'},
-    { 'source': env.WKDIR+'/config/files/controller', 'point': '/tmp/config' }
+    { 'source': env.SWITCHDIR, 'point': '/opt/switch-drivers'}
   ]
 }
 

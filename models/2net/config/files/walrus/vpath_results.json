@@ -10,13 +10,13 @@
           "Status": "ok",
           "Who": "n0",
           "Message": "ping-success",
-          "Satisfied": true
+          "Satisfied": false
         },
         {
           "Status": "ok",
           "Who": "n1",
           "Message": "ping-success",
-          "Satisfied": true
+          "Satisfied": false
         }
       ],
       "Fail": [
