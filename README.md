@@ -15,41 +15,28 @@ controller = {
   'name': 'control',
   'image': 'debian-stretch', 
   'os': 'linux',
-  'mounts': [
-    { 'source': env.SWITCHDIR, 'point': '/opt/switch-drivers'}
-  ]
+  'mounts': [{ 'source': env.SWITCHDIR, 'point': '/opt/switch-drivers'}]
 }
 
 walrus = {
   'name': 'walrus',
   'image': 'debian-stretch',
   'os': 'linux',
-  'mounts': [
-    { 'source': env.WALRUSDIR, 'point': '/opt/walrus'},
-    { 'source': env.WKDIR+'/config/files/walrus', 'point': '/tmp/config' }
-  ]
+  'mounts': [{ 'source': env.WALRUSDIR, 'point': '/opt/walrus'}]
 }
 
 zwitch = {
   'name': 'nimbus',
   'image': 'cumulus-latest',
   'os': 'linux',
-  'mounts': [
-    { 'source': env.AGXDIR, 'point': '/opt/agx' },
-    { 'source': env.NETLINKDIR, 'point': '/opt/netlink' },
-    { 'source': env.SWITCHDIR, 'point': '/opt/switch-drivers'},
-    { 'source': env.WKDIR+'/config/files/nimbus', 'point': '/tmp/config' }
-  ]
+  'mounts': [{ 'source': env.AGXDIR, 'point': '/opt/agx' }]
 };
 
 nodes = Range(2).map(i => ({
   'name': `n${i}`,
   'image': 'debian-stretch',
   'os': 'linux',
-  'mounts': [
-    { 'source': env.WALRUSDIR, 'point': '/opt/walrus'},
-    { 'source': env.WKDIR+'/config/files/node', 'point': '/tmp/config' }
-  ]
+  'mounts': [{ 'source': env.WALRUSDIR, 'point': '/opt/walrus'}]
 }));
 
 links = [
