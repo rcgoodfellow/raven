@@ -11,25 +11,45 @@ Raven is a tool for rapidly designing, visualizing, deploying and managing virtu
 Here is an example of a network model
 
 ```javascript
-workspace = '/space/raven/models/2net'
-
 controller = {
-  'name': 'control', 'image': 'debian-stretch', 'os': 'linux', 'level': 1,
-  'mounts': [{ 'source': '/space/switch-drivers', 'point': '/opt/switch-drivers'}]
+  'name': 'control',
+  'image': 'debian-stretch', 
+  'os': 'linux',
+  'mounts': [
+    { 'source': env.SWITCHDIR, 'point': '/opt/switch-drivers'}
+  ]
 }
 
 walrus = {
-  'name': 'walrus', 'image': 'debian-stretch', 'os': 'linux', 'level': 2,
-  'mounts': [{ 'source': '/space/walrustf', 'point': '/opt/walrus'}]
+  'name': 'walrus',
+  'image': 'debian-stretch',
+  'os': 'linux',
+  'mounts': [
+    { 'source': env.WALRUSDIR, 'point': '/opt/walrus'},
+    { 'source': env.WKDIR+'/config/files/walrus', 'point': '/tmp/config' }
+  ]
 }
 
 zwitch = {
-  'name': 'nimbus', 'image': 'cumulus-latest', 'os': 'linux', 'level': 2,
-  'mounts': [{ 'source': '/space/netlink', 'point': '/opt/netlink' }]
+  'name': 'nimbus',
+  'image': 'cumulus-latest',
+  'os': 'linux',
+  'mounts': [
+    { 'source': env.AGXDIR, 'point': '/opt/agx' },
+    { 'source': env.NETLINKDIR, 'point': '/opt/netlink' },
+    { 'source': env.SWITCHDIR, 'point': '/opt/switch-drivers'},
+    { 'source': env.WKDIR+'/config/files/nimbus', 'point': '/tmp/config' }
+  ]
 };
 
 nodes = Range(2).map(i => ({
-  'name': `n${i}`, 'image': 'debian-stretch', 'os': 'linux', 'level': 3
+  'name': `n${i}`,
+  'image': 'debian-stretch',
+  'os': 'linux',
+  'mounts': [
+    { 'source': env.WALRUSDIR, 'point': '/opt/walrus'},
+    { 'source': env.WKDIR+'/config/files/node', 'point': '/tmp/config' }
+  ]
 }));
 
 links = [
@@ -66,6 +86,9 @@ First start the raven application (you must be root due to the way we use libvir
 sudo su
 cd raven/models/2net
 
+# grab the source code required for this model and set the mapping environment variables
+source fetch.sh
+
 # build the raven system (creates virtual machines and network descriptions)
 rvn build
 
@@ -82,11 +105,20 @@ rvn pingwait control walrus nimbus n0 n1
 rvn configure
 
 # run some ad-hoc config on a node
-rvn ansible n1 $MYCONFIG/mysetup.yml
+rvn ansible n1 config/n1.yml
 
 # ssh into a node
 eval $(rvn ssh walrus)
 ```
+
+To run a full build, test deploy cycle run the following.
+
+```shell
+./launch.sh
+```
+
+The launch.sh script is fairly self explanatory and concretely shows many of the capabilities of raven.
+
 
 ### Web Interface
 Not functional at the moment until I get back to syncing the web code with the recent revamp.
