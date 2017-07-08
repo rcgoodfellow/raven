@@ -104,7 +104,7 @@ To run a full build, test deploy cycle run the following.
 ./launch.sh
 ```
 
-The launch.sh script is fairly self explanatory and concretely shows many of the capabilities of raven.
+The [launch.sh](models/2net/launch.sh) script is fairly self explanatory and concretely shows many of the capabilities of raven.
 
 
 ### Web Interface
