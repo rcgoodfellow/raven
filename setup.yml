@@ -21,7 +21,7 @@
 
     - name: compute debian libvirt package name
       set_fact:
-        libvirtd_package: libvirt-daemon
+        libvirtd_package: libvirt-daemon-system
         libvirtd: libvirtd
       when: ansible_distribution == "Debian"
 
