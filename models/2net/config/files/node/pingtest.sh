@@ -20,10 +20,10 @@ trap "exit" INT
 while true; do
   ping -q -w 1 $target &> /dev/null
   if [[ "$?" -ne 0 ]]; then
-    $wtf walrus warning $testid $hostname 0 ping-failed
+    $wtf walrus warning $testid $hostname ping-failed
     printf ". "
   else
-    $wtf walrus ok $testid $hostname 0 ping-success
+    $wtf walrus ok $testid $hostname ping-success
     printf "+"
   fi
   i=$((i+1))

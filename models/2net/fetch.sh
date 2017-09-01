@@ -9,19 +9,19 @@ fi
 cd src
 
 if [[ ! -d agx ]]; then
-git clone git@github.com:rcgoodfellow/agx
+git clone https://github.com/rcgoodfellow/agx
 fi
 
 if [[ ! -d switch-drivers ]]; then
-git clone git@github.com:deter-project/switch-drivers
+git clone https://github.com/deter-project/switch-drivers
 fi
 
 if [[ ! -d netlink ]]; then
-git clone git@github.com:rcgoodfellow/netlink
+git clone https://github.com/rcgoodfellow/netlink
 fi
 
 if [[ ! -d walrustf ]]; then
-git clone git@github.com:rcgoodfellow/walrustf
+git clone https://github.com/rcgoodfellow/walrustf
 fi
 
 export AGXDIR=`pwd`/agx
