@@ -88,8 +88,14 @@ rvn status
 # wait for the virtual nodes and switches to come up
 rvn pingwait control walrus nimbus n0 n1
 
+# show the status of the virtual nodes now that they are up (you will see IP addresses)
+rvn status
+
 # configure the virtual nodes and switches
 rvn configure
+
+# while configure is running, you can open up another shell window and type in
+# rvn status to see how things are progressing
 
 # run some ad-hoc config on a node
 rvn ansible n1 config/n1.yml
