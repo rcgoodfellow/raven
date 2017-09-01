@@ -62,11 +62,12 @@ type Mount struct {
 }
 
 type Host struct {
-	Name   string  `json:"name"`
-	Image  string  `json:"image"`
-	OS     string  `json:"os"`
-	Mounts []Mount `json:"mounts"`
-	Level  int     `json:"level"`
+	Name      string  `json:"name"`
+	Image     string  `json:"image"`
+	OS        string  `json:"os"`
+	NoTestNet bool    `json:"no-testnet"`
+	Mounts    []Mount `json:"mounts"`
+	Level     int     `json:"level"`
 }
 
 type Zwitch struct {

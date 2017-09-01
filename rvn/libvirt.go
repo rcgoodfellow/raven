@@ -110,14 +110,18 @@ func Create() {
 		d := newDom(&node.Host, &topo)
 		GenConfig(node.Host, topo)
 		doms[node.Name] = d
-		domConnect(topo.QualifyName("test"), &node.Host, d, nil)
+		if !node.NoTestNet {
+			domConnect(topo.QualifyName("test"), &node.Host, d, nil)
+		}
 	}
 
 	for _, zwitch := range topo.Switches {
 		d := newDom(&zwitch.Host, &topo)
 		GenConfig(zwitch.Host, topo)
 		doms[zwitch.Name] = d
-		domConnect(topo.QualifyName("test"), &zwitch.Host, d, nil)
+		if !zwitch.NoTestNet {
+			domConnect(topo.QualifyName("test"), &zwitch.Host, d, nil)
+		}
 	}
 
 	for _, link := range topo.Links {
