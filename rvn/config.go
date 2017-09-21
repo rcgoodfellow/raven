@@ -152,7 +152,7 @@ func runConfig(yml, topo string, h Host, s DomStatus) {
 		yml,
 		"--extra-vars", extra_vars,
 		`--ssh-extra-args='-i/var/rvn/ssh/rvn'`,
-		"--user=rvn",
+		"--user=rvn", "--private-key=/var/rvn/ssh/rvn",
 	)
 	cmd.Env = append(os.Environ(), "ANSIBLE_HOST_KEY_CHECKING=False")
 	out, err := cmd.CombinedOutput()
