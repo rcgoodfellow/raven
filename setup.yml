@@ -139,7 +139,6 @@
       with_items:
         - github.com/libvirt/libvirt-go
         - github.com/libvirt/libvirt-go-xml
-        - github.com/revel/cmd/revel
         - github.com/go-redis/redis
         - github.com/sparrc/go-ping
         - github.com/fatih/color
