@@ -9,35 +9,61 @@
         url: https://deb.nodesource.com/setup_8.x
         dest: /tmp/nodesetup
         mode: "a+x"
+      when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
 
     - name: install nodejs repo
       shell: /tmp/nodesetup
+      when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
 
-    - name: compute ubuntu libvirt package name
+    - name: compute package names
       set_fact:
-        libvirtd_package: libvirt-bin
-        libvirtd: libvirt-bin
-      when: ansible_distribution == "Ubuntu"
-
-    - name: compute debian libvirt package name
-      set_fact:
+        devel_package: build-essential
         libvirtd_package: libvirt-daemon-system
         libvirtd: libvirtd
+        redis_package: redis-server
+        libvirt_dev_package: libvirt-dev
+        qemu_utils_package: qemu-utils
+        nfs_package: nfs-kernel-server
       when: ansible_distribution == "Debian"
+      
+    - name: compute package names
+      set_fact:
+        devel_package: build-essential
+        libvirtd_package: libvirt-bin
+        libvirtd: libvirt-bin
+        redis_package: redis-server
+        libvirt_dev_package: libvirt-dev
+        qemu_utils_package: qemu-utils
+        nfs_package: nfs-kernel-server
+      when: ansible_distribution == "Ubuntu"
+    
+    - name: compute package names
+      set_fact:
+        libvirtd_package: libvirt-daemon-kvm
+        libvirtd: libvirtd
+        devel_package: "@development-tools"
+        redis_package: redis
+        libvirt_dev_package: libvirt-devel
+        qemu_utils_package: qemu-common
+        nfs_package: nfs-utils
+      when: ansible_distribution == "Fedora"
+
+
+
 
     - name: install software
-      apt: name={{item}} state=latest update_cache=yes
+      package: name={{item}} state=latest
       with_items:
-        - build-essential
-        - redis-server
+        - "{{devel_package}}"
+        - "{{redis_package}}"
         - git
         - golang
-        - libvirt-dev
         - "{{libvirtd_package}}"
+        - "{{libvirt_dev_package}}"
         - nodejs
         - qemu-kvm
-        - qemu-utils
-        - nfs-kernel-server
+        - "{{qemu_utils_package}}"
+        - "{{nfs_package}}"
 
     - name: set up filesystem
       file: path={{item.path}} state={{item.state}}
@@ -129,7 +155,7 @@
 
     - name: restart redis
       service:
-        name: redis-server
+        name: "{{redis_package}}"
         state: restarted
 
     - name: install go libraries
@@ -172,4 +198,4 @@
         - iamme-freebsd
 
     - name: allow ping from go
-      command: sysctl -w net.ipv4.ping_group_range="0   2147483647"
+      command: sysctl -w net.ipv4.ping_group_range="0 1"
