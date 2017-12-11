@@ -471,29 +471,35 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 		Devices: &xlibvirt.DomainDeviceList{
 			Serials: []xlibvirt.DomainSerial{
 				xlibvirt.DomainSerial{
-					Type: "pty",
+					Source: &xlibvirt.DomainChardevSource{
+						Pty: &xlibvirt.DomainChardevSourcePty{},
+					},
 				},
 			},
 			Consoles: []xlibvirt.DomainConsole{
 				xlibvirt.DomainConsole{
-					Type:   "pty",
+					Source: &xlibvirt.DomainChardevSource{
+						Pty: &xlibvirt.DomainChardevSourcePty{},
+					},
 					Target: &xlibvirt.DomainConsoleTarget{Type: "serial"},
 				},
 			},
 			Graphics: []xlibvirt.DomainGraphic{
 				xlibvirt.DomainGraphic{
-					Type:     "vnc",
-					Port:     -1,
-					AutoPort: "yes",
+					VNC: &xlibvirt.DomainGraphicVNC{
+						Port:     -1,
+						AutoPort: "yes",
+					},
 				},
 			},
 			Disks: []xlibvirt.DomainDisk{
 				xlibvirt.DomainDisk{
-					Type:   "file",
 					Device: "disk",
 					Driver: &xlibvirt.DomainDiskDriver{Name: "qemu", Type: "qcow2"},
 					Source: &xlibvirt.DomainDiskSource{
-						File: instanceImage,
+						File: &xlibvirt.DomainDiskSourceFile{
+							File: instanceImage,
+						},
 					},
 					Target: &xlibvirt.DomainDiskTarget{Dev: "vda", Bus: "virtio"},
 				},
@@ -523,10 +529,13 @@ func domConnect(
 	}
 	dom.Devices.Interfaces = append(dom.Devices.Interfaces,
 		xlibvirt.DomainInterface{
-			Type:   "network",
-			Source: &xlibvirt.DomainInterfaceSource{Network: net},
-			Model:  &xlibvirt.DomainInterfaceModel{Type: "virtio"},
-			Boot:   boot,
+			Source: &xlibvirt.DomainInterfaceSource{
+				Network: &xlibvirt.DomainInterfaceSourceNetwork{
+					Network: net,
+				},
+			},
+			Model: &xlibvirt.DomainInterfaceModel{Type: "virtio"},
+			Boot:  boot,
 		})
 }
 

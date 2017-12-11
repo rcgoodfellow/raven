@@ -185,8 +185,8 @@ func doVnc(node string) {
 	}
 
 	for _, x := range di.Devices.Graphics {
-		if x.Type == "vnc" {
-			fmt.Printf("%d\n", x.Port)
+		if x.VNC != nil {
+			fmt.Printf("%d\n", x.VNC.Port)
 			break
 		}
 	}
