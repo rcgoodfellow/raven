@@ -49,8 +49,6 @@
       when: ansible_distribution == "Fedora"
 
 
-
-
     - name: install software
       package: name={{item}} state=latest
       with_items:
@@ -64,6 +62,14 @@
         - qemu-kvm
         - "{{qemu_utils_package}}"
         - "{{nfs_package}}"
+
+    - name: link nodejs -> node
+      file:
+        src: '/usr/bin/node'
+        dest: '/usr/bin/nodejs'
+        state: link
+      when: ansible_distribution == "Fedora"
+
 
     - name: set up filesystem
       file: path={{item.path}} state={{item.state}}
@@ -84,7 +90,10 @@
         dest: /var/rvn/img/{{item}}
       with_items:
         - cumulus-latest.qcow2
+        - cumulusvx-3.5.qcow2
         - debian-stretch.qcow2
+        - debian-latest.qcow2
+        - fedora-latest.qcow2
         - freebsd-11-router.qcow2
         - freebsd-11.qcow2
 
@@ -182,12 +191,18 @@
       environment:
         GOPATH: /root/.go
     
-    - name: install rvn-cli
+    - name: install rvn-cli in /usr/local/bin
       copy:
         src: /root/.go/src/github.com/rcgoodfellow/raven/rvn-cli/rvn
         dest: /usr/local/bin/rvn
         remote_src: true
         mode: "a+x"
+
+    - name: install rvn-cli in /usr/bin
+      file:
+        src: /usr/local/bin/rvn
+        dest: /usr/bin/rvn
+        state: link
 
     - name: fetch utilities
       get_url:
