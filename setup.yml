@@ -86,16 +86,14 @@
 
     - name: fetch base images
       get_url:
-        url: http://mirror.deterlab.net/rvn/{{item}}
+        url: http://mirror.deterlab.net/rvn/img/{{item}}
         dest: /var/rvn/img/{{item}}
       with_items:
-        - cumulus-latest.qcow2
         - cumulusvx-3.5.qcow2
         - debian-stretch.qcow2
-        - debian-latest.qcow2
-        - fedora-latest.qcow2
-        - freebsd-11-router.qcow2
+        - fedora-27.qcow2
         - freebsd-11.qcow2
+        - freebsd-11r.qcow2
 
     - name: create netboot base image
       command: qemu-img create /var/rvn/img/netboot.qcow2 25G
@@ -119,6 +117,12 @@
     - lineinfile:
         dest: /etc/sysctl.conf
         line: net.ipv4.ping_group_range="0   2147483647"
+      when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+    - lineinfile:
+        dest: /etc/sysctl.conf
+        line: net.ipv4.ping_group_range=0 1
+      when: ansible_distribution == "Fedora"
 
     - command: sysctl -p
     #TODO end untested
