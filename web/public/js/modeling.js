@@ -62,3 +62,26 @@ Topo = (nodes, images, links, switches) => ({
   'switches': switches
 })
 
+
+////
+//// Units
+////
+function B(value) {
+  return { 'value': value, 'unit': 'b' };
+}
+
+function KB(value) {
+  return { 'value': value, 'unit': 'KB' };
+}
+
+function MB(value) {
+  return { 'value': value, 'unit': 'MB' };
+}
+
+function GB(value) {
+  return { 'value': value, 'unit': 'GB' };
+}
+
+function TB(value) {
+  return { 'value': value, 'unit': 'TB' };
+}

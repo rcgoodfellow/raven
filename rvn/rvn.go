@@ -61,13 +61,75 @@ type Mount struct {
 	Source string `json:"source"`
 }
 
+type UnitValue struct {
+	Value int    `json:"value"`
+	Unit  string `json:"unit"`
+}
+
+type CPU struct {
+	Sockets int    `json:"sockets"`
+	Cores   int    `json:"cores"`
+	Threads int    `json:"threads"`
+	Model   string `json:"arch"`
+}
+
+type Memory struct {
+	Capacity UnitValue `json:"capacity"`
+}
+
 type Host struct {
 	Name      string  `json:"name"`
 	Image     string  `json:"image"`
 	OS        string  `json:"os"`
 	NoTestNet bool    `json:"no-testnet"`
 	Mounts    []Mount `json:"mounts"`
-	Level     int     `json:"level"`
+	CPU       *CPU    `json:"cpu,omitempty"`
+	Memory    *Memory `json:"memory,omitempty"`
+}
+
+// Default Values
+
+var defaults = struct {
+	Memory *Memory
+	CPU    *CPU
+}{
+	Memory: &Memory{
+		Capacity: UnitValue{
+			Value: 4,
+			Unit:  "GB",
+		},
+	},
+	CPU: &CPU{
+		Sockets: 1,
+		Cores:   1,
+		Threads: 1,
+		Model:   "qemu64",
+	},
+}
+
+func fillInMissing(h *Host) {
+	if h.Memory == nil {
+		h.Memory = defaults.Memory
+	}
+	if h.CPU == nil {
+		h.CPU = defaults.CPU
+	} else {
+		//if these values are omitted by the user they are zero, but that is not
+		//an appropriate default value e.g., there is no computer with 0 sockets
+		if h.CPU.Sockets == 0 {
+			h.CPU.Sockets = 1
+		}
+		if h.CPU.Cores == 0 {
+			h.CPU.Cores = 1
+		}
+		if h.CPU.Threads == 0 {
+			h.CPU.Threads = 1
+		}
+		if h.CPU.Model == "" {
+			h.CPU.Model = "qemu64"
+		}
+	}
+
 }
 
 type Zwitch struct {
@@ -176,7 +238,20 @@ func SrcDir() (string, error) {
 func ReadTopo(src []byte) (Topo, error) {
 	var topo Topo
 	err := json.Unmarshal(src, &topo)
-	return topo, err
+	if err != nil {
+		return topo, err
+	}
+
+	// apply defaults to any values not supplied by user
+	for i := 0; i < len(topo.Nodes); i++ {
+		fillInMissing(&topo.Nodes[i].Host)
+	}
+
+	for i := 0; i < len(topo.Switches); i++ {
+		fillInMissing(&topo.Switches[i].Host)
+	}
+
+	return topo, nil
 }
 
 func (t Topo) QualifyName(n string) string {

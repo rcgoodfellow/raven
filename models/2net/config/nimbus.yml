@@ -11,10 +11,15 @@
     - apt: name={{item}} state=latest
       with_items:
         - vim
-        - golang
+        - golang-1.7
         - bash-completion
         - git
         - build-essential
+
+    - file:
+        src: /usr/lib/go-1.7/bin/go
+        dest: /usr/bin/go
+        state: link
 
     - copy: src={{item.src}} dest={{item.dest}} remote_src=True
       with_items:
@@ -47,6 +52,7 @@
       environment:
         GOPATH: /root/.go
       with_items:
+        - github.com/pkg/profile
         - github.com/vishvananda/netlink/nl
 
     - shell: go install

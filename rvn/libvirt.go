@@ -312,6 +312,7 @@ func Launch() []string {
 
 	//test network
 	n, err := conn.LookupNetworkByName(topo.QualifyName("test"))
+	allowRpcBind(n)
 	if err != nil {
 		errors = append(errors, fmt.Sprintf("%s: %v", "test", err))
 	} else {
@@ -467,7 +468,23 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 		OS: &xlibvirt.DomainOS{
 			Type: &xlibvirt.DomainOSType{Type: "hvm"},
 		},
-		Memory: &xlibvirt.DomainMemory{Value: 4096, Unit: "MiB"},
+		CPU: &xlibvirt.DomainCPU{
+			Model: &xlibvirt.DomainCPUModel{
+				Value: h.CPU.Model,
+			},
+			Topology: &xlibvirt.DomainCPUTopology{
+				Sockets: h.CPU.Sockets,
+				Cores:   h.CPU.Cores,
+				Threads: h.CPU.Threads,
+			},
+		},
+		VCPU: &xlibvirt.DomainVCPU{
+			Value: h.CPU.Sockets * h.CPU.Cores * h.CPU.Threads,
+		},
+		Memory: &xlibvirt.DomainMemory{
+			Value: uint(h.Memory.Capacity.Value),
+			Unit:  h.Memory.Capacity.Unit,
+		},
 		Devices: &xlibvirt.DomainDeviceList{
 			Serials: []xlibvirt.DomainSerial{
 				xlibvirt.DomainSerial{
@@ -670,6 +687,8 @@ func destroyNetwork(name string, conn *libvirt.Connect) {
 	}
 }
 
+//TODO need to unset some of these properties on destruction, especially
+//     iptables rules
 func setBridgeProperties(net *libvirt.Network) {
 	allowLLDP(net)
 	allowBOOTP(net)
@@ -713,6 +732,49 @@ func allowBOOTP(net *libvirt.Network) {
 
 	if err != nil {
 		log.Printf("error allowing bootp through iptables %s - %v", out, err)
+		return
+	}
+
+}
+
+func allowRpcBind(net *libvirt.Network) {
+	name, _ := net.GetName()
+	br, err := net.GetBridgeName()
+	if err != nil {
+		log.Printf("error getting bridge for %s - %v", name, err)
+		return
+	}
+
+	out, err := exec.Command("iptables", "-I", "INPUT",
+		"-i", br,
+		"-p", "tcp",
+		"--dport", "111",
+		"-j", "ACCEPT").CombinedOutput()
+
+	if err != nil {
+		log.Printf("error allowing rpcbind tcp through iptables %s - %v", out, err)
+		return
+	}
+
+	out, err = exec.Command("iptables", "-I", "INPUT",
+		"-i", br,
+		"-p", "udp",
+		"--dport", "111",
+		"-j", "ACCEPT").CombinedOutput()
+
+	if err != nil {
+		log.Printf("error allowing rpcbind udp through iptables %s - %v", out, err)
+		return
+	}
+
+	out, err = exec.Command("iptables", "-I", "INPUT",
+		"-i", br,
+		"-p", "tcp",
+		"--dport", "2049",
+		"-j", "ACCEPT").CombinedOutput()
+
+	if err != nil {
+		log.Printf("error allowing nfs through iptables %s - %v", out, err)
 		return
 	}
 

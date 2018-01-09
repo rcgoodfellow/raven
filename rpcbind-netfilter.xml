@@ -1,0 +1,27 @@
+<filter name='allow-rpcbind' chain='ipv4'>
+  <rule action='accept' direction='inout'>
+    <udp match='yes' dstportstart='111' dstportend='111' state='NEW' />
+  </rule>
+  <rule action='accept' direction='inout'>
+    <udp match='yes' dstportstart='2049' dstportend='2049' state='NEW'  />
+  </rule>
+  <rule action='accept' direction='inout'>
+    <tcp match='yes' dstportstart='111' dstportend='111' state='NEW'  />
+  </rule>
+  <rule action='accept' direction='inout'>
+    <tcp match='yes' dstportstart='2049' dstportend='2049' state='NEW'  />
+  </rule>
+
+  <rule action='accept' direction='inout'>
+    <udp match='yes' srcportstart='111' srcportend='111' state='NEW'  />
+  </rule>
+  <rule action='accept' direction='inout'>
+    <udp match='yes' srcportstart='2049' srcportend='2049' state='NEW'  />
+  </rule>
+  <rule action='accept' direction='inout'>
+    <tcp match='yes' srcportstart='111' srcportend='111' state='NEW'  />
+  </rule>
+  <rule action='accept' direction='inout'>
+    <tcp match='yes' srcportstart='2049' srcportend='2049' state='NEW' />
+  </rule>
+</filter>

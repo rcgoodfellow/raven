@@ -25,9 +25,14 @@
 
 controller = {
   'name': 'control',
-  'image': 'debian-stretch',
+  'image': 'debian-latest',
   'os': 'linux',
-  'level': 1,
+  'cpu': {
+    'cores': 4
+  },
+  'memory': {
+    'capacity': GB(4)
+  },
   'mounts': [
     { 'source': env.SWITCHDIR, 'point': '/opt/switch-drivers'}
   ]
@@ -35,9 +40,14 @@ controller = {
 
 walrus = {
   'name': 'walrus',
-  'image': 'debian-stretch',
+  'image': 'debian-latest',
   'os': 'linux',
-  'level': 2,
+  'cpu': {
+    'cores': 1
+  },
+  'memory': {
+    'capacity': GB(2)
+  },
   'mounts': [
     { 'source': env.WALRUSDIR, 'point': '/opt/walrus'},
     { 'source': env.WKDIR+'/config/files/walrus', 'point': '/tmp/config' }
@@ -46,9 +56,8 @@ walrus = {
 
 zwitch = {
   'name': 'nimbus',
-  'image': 'cumulus-latest',
+  'image': 'cumulusvx-3.5',
   'os': 'linux',
-  'level': 2,
   'mounts': [
     { 'source': env.AGXDIR, 'point': '/opt/agx' },
     { 'source': env.NETLINKDIR, 'point': '/opt/netlink' },
@@ -59,9 +68,14 @@ zwitch = {
 
 nodes = Range(2).map(i => ({
   'name': `n${i}`,
-  'image': 'debian-stretch',
+  'image': 'debian-latest',
   'os': 'linux',
-  'level': 3,
+  'cpu': {
+    'cores': 4
+  },
+  'memory': {
+    'capacity': GB(6)
+  },
   'mounts': [
     { 'source': env.WALRUSDIR, 'point': '/opt/walrus'},
     { 'source': env.WKDIR+'/config/files/node', 'point': '/tmp/config' }
