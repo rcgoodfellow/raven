@@ -225,8 +225,10 @@ func Destroy() {
 	}
 
 	for _, x := range topo.Links {
+		cleanupLinkNetwork(topo.QualifyName(x.Name), conn)
 		destroyNetwork(topo.QualifyName(x.Name), conn)
 	}
+	cleanupTestNetwork(topo.QualifyName("test"), conn)
 	destroyNetwork(topo.QualifyName("test"), conn)
 	LoadRuntime().FreeSubnet(topo.Name)
 	UnexportNFS(topo.Name)
@@ -676,6 +678,24 @@ func shutdownDomain(name string, conn *libvirt.Connect) error {
 	}
 }
 
+func cleanupLinkNetwork(name string, conn *libvirt.Connect) {
+	x, err := conn.LookupNetworkByName(name)
+	if err != nil {
+		//ok nothing to clean up
+	} else {
+		cleanupBOOTP(x)
+	}
+}
+
+func cleanupTestNetwork(name string, conn *libvirt.Connect) {
+	x, err := conn.LookupNetworkByName(name)
+	if err != nil {
+		//ok nothing to clean up
+	} else {
+		cleanupRpcBind(x)
+	}
+}
+
 func destroyNetwork(name string, conn *libvirt.Connect) {
 	x, err := conn.LookupNetworkByName(name)
 	if err != nil {
@@ -687,8 +707,6 @@ func destroyNetwork(name string, conn *libvirt.Connect) {
 	}
 }
 
-//TODO need to unset some of these properties on destruction, especially
-//     iptables rules
 func setBridgeProperties(net *libvirt.Network) {
 	allowLLDP(net)
 	allowBOOTP(net)
@@ -737,6 +755,26 @@ func allowBOOTP(net *libvirt.Network) {
 
 }
 
+func cleanupBOOTP(net *libvirt.Network) {
+	name, _ := net.GetName()
+	br, err := net.GetBridgeName()
+	if err != nil {
+		log.Printf("error getting bridge for %s - %v", name, err)
+		return
+	}
+
+	out, err := exec.Command("iptables", "-D", "FORWARD",
+		"-i", br,
+		"-d", "255.255.255.255",
+		"-j", "ACCEPT").CombinedOutput()
+
+	if err != nil {
+		log.Printf("error cleaning bootp iptables rules %s - %v", out, err)
+		return
+	}
+
+}
+
 func allowRpcBind(net *libvirt.Network) {
 	name, _ := net.GetName()
 	br, err := net.GetBridgeName()
@@ -775,6 +813,49 @@ func allowRpcBind(net *libvirt.Network) {
 
 	if err != nil {
 		log.Printf("error allowing nfs through iptables %s - %v", out, err)
+		return
+	}
+
+}
+
+func cleanupRpcBind(net *libvirt.Network) {
+	name, _ := net.GetName()
+	br, err := net.GetBridgeName()
+	if err != nil {
+		log.Printf("error getting bridge for %s - %v", name, err)
+		return
+	}
+
+	out, err := exec.Command("iptables", "-D", "INPUT",
+		"-i", br,
+		"-p", "tcp",
+		"--dport", "111",
+		"-j", "ACCEPT").CombinedOutput()
+
+	if err != nil {
+		log.Printf("error cleaning up iptables rpcbind tcp rule %s - %v", out, err)
+		return
+	}
+
+	out, err = exec.Command("iptables", "-D", "INPUT",
+		"-i", br,
+		"-p", "udp",
+		"--dport", "111",
+		"-j", "ACCEPT").CombinedOutput()
+
+	if err != nil {
+		log.Printf("error cleaning up iptables rpcbind udp rule %s - %v", out, err)
+		return
+	}
+
+	out, err = exec.Command("iptables", "-D", "INPUT",
+		"-i", br,
+		"-p", "tcp",
+		"--dport", "2049",
+		"-j", "ACCEPT").CombinedOutput()
+
+	if err != nil {
+		log.Printf("error cleaning up nfs iptables tcp rule%s - %v", out, err)
 		return
 	}
 
