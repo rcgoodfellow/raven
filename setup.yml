@@ -94,6 +94,7 @@
         - fedora-27.qcow2
         - freebsd-11.qcow2
         - freebsd-11r.qcow2
+        - freebsd-11d.qcow2
 
     - name: create netboot base image
       command: qemu-img create /var/rvn/img/netboot.qcow2 25G
@@ -131,7 +132,7 @@
       copy: src={{item.src}} dest=/usr/local/lib/rvn/{{item.dest}}
       with_items:
         - {src: run_model.js, dest: run_model.js}
-        - {src: web/public/js/modeling.js, dest: modeling.js}
+        - {src: js/modeling.js, dest: modeling.js}
 
     - name: add raven keys to root
       copy: src=/var/rvn/ssh/{{item}} dest=/root/.ssh/{{item}} remote_src=true
@@ -165,6 +166,37 @@
       service:
         name: "{{libvirtd}}"
         state: restarted
+
+    - name: enable rpcbind
+      service:
+        name: rpcbind
+        enabled: yes
+      when: ansible_distribution == "Fedora"
+
+    - name: restart rpcbind
+      service:
+        name: rpcbind
+        state: restarted
+      when: ansible_distribution == "Fedora"
+
+    - name: enable nfs-server
+      service:
+        name: nfs-server
+        enabled: yes
+      when: ansible_distribution == "Fedora"
+
+    - name: restart nfs-server
+      service:
+        name: nfs-server
+        state: restarted
+      when: ansible_distribution == "Fedora"
+
+
+    - name: enable redis
+      service:
+        name: "{{redis_package}}"
+        enabled: yes
+      when: ansible_distribution == "Fedora"
 
     - name: restart redis
       service:
