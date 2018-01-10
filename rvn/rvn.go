@@ -103,7 +103,7 @@ var defaults = struct {
 		Sockets: 1,
 		Cores:   1,
 		Threads: 1,
-		Model:   "qemu64",
+		Model:   "kvm64",
 	},
 }
 
@@ -126,7 +126,7 @@ func fillInMissing(h *Host) {
 			h.CPU.Threads = 1
 		}
 		if h.CPU.Model == "" {
-			h.CPU.Model = "qemu64"
+			h.CPU.Model = "kvm64"
 		}
 	}
 
