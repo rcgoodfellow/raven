@@ -3,10 +3,12 @@
 # Raven
 **R**y's **A**pparatus for **V**irtual **E**ncodable **N**etworks
 
-Raven is a tool for rapidly designing, visualizing, deploying and managing virtual networks. Raven networks are:
+Raven is a tool for rapidly designing, deploying and managing virtual networks. Raven networks are:
 - designed programatically through a javascript API
-- visualized and managed through a web interface
-- materialized and deployed by a libvirt enabled backend with Cumulus VX virtual switches
+- managed through a command line interface
+- materialized and deployed by a libvirt enabled backend
+
+When you need more infrastructure level fidelity than a Kubernetes deployment and more programmability than a collection of Vagrantfiles, raven may be of use to you.
 
 Here is an example of a network model
 
@@ -27,7 +29,7 @@ walrus = {
 
 zwitch = {
   'name': 'nimbus',
-  'image': 'cumulus-latest',
+  'image': 'cumulusvx-3.5',
   'os': 'linux',
   'mounts': [{ 'source': env.AGXDIR, 'point': '/opt/agx' }]
 };
