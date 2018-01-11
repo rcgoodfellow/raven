@@ -9,52 +9,7 @@ import (
 	"os/exec"
 )
 
-// @@@ Api %%% ----------------------------------------------------------------
-
-func RunModel() error {
-
-	// execute the javascript model
-	out, err := exec.Command(
-		"nodejs",
-		"/usr/local/lib/rvn/run_model.js",
-		"model.js",
-	).CombinedOutput()
-
-	if err != nil {
-		log.Printf("error running model")
-		log.Printf(string(out))
-		return err
-	}
-
-	// save the result of the model execution in the working directory
-	topo, err := ReadTopo(out)
-	if err != nil {
-		log.Printf("error reading topo %v", err)
-		return err
-	}
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Printf("cannot determine working directory %v", err)
-		return err
-	}
-	topo.Dir = wd
-
-	buf, err := json.MarshalIndent(topo, "", "  ")
-	if err != nil {
-		log.Printf("error marshalling topo %v", err)
-		return err
-	}
-
-	err = ioutil.WriteFile(".rvn/topo.json", buf, 0644)
-	if err != nil {
-		log.Printf("error writing topo %v", err)
-	}
-
-	return nil
-
-}
-
-// @@@ Types $$$ --------------------------------------------------------------
+// Types ======================================================================
 
 type Mount struct {
 	Point  string `json:"point"`
@@ -87,7 +42,45 @@ type Host struct {
 	Memory    *Memory `json:"memory,omitempty"`
 }
 
-// Default Values
+type Zwitch struct {
+	Host
+}
+
+type Node struct {
+	Host
+}
+
+type Endpoint struct {
+	Name string `json:"name"`
+	Port string `json:"port"`
+}
+
+type Link struct {
+	Name      string                 `json:"name"`
+	Endpoints [2]Endpoint            `json:"endpoints"`
+	Props     map[string]interface{} `json:"props"`
+}
+
+type Topo struct {
+	Name     string   `json:"name"`
+	Nodes    []Node   `json:"nodes"`
+	Switches []Zwitch `json:"switches"`
+	Links    []Link   `json:"links"`
+	Dir      string   `json:"dir"`
+	MgmtIp   string   `json:"mgmtip"`
+}
+
+type Runtime struct {
+	SubnetTable        [256]bool
+	SubnetReverseTable map[string]int
+}
+
+type RebootRequest struct {
+	Topo  string   `json:"topo"`
+	Nodes []string `json:"nodes"`
+}
+
+// Default Values =============================================================
 
 var defaults = struct {
 	Memory *Memory
@@ -132,33 +125,9 @@ func fillInMissing(h *Host) {
 
 }
 
-type Zwitch struct {
-	Host
-}
+// Methods ====================================================================
 
-type Node struct {
-	Host
-}
-
-type Endpoint struct {
-	Name string `json:"name"`
-	Port string `json:"port"`
-}
-
-type Link struct {
-	Name      string                 `json:"name"`
-	Endpoints [2]Endpoint            `json:"endpoints"`
-	Props     map[string]interface{} `json:"props"`
-}
-
-type Topo struct {
-	Name     string   `json:"name"`
-	Nodes    []Node   `json:"nodes"`
-	Switches []Zwitch `json:"switches"`
-	Links    []Link   `json:"links"`
-	Dir      string   `json:"dir"`
-	MgmtIp   string   `json:"mgmtip"`
-}
+// Topo -----------------------------------------------------------------------
 
 func (t *Topo) getHost(name string) *Host {
 	for i, x := range t.Nodes {
@@ -172,86 +141,6 @@ func (t *Topo) getHost(name string) *Host {
 		}
 	}
 	return nil
-}
-
-func LoadTopo() (Topo, error) {
-
-	wd, err := WkDir()
-	if err != nil {
-		log.Printf("loadtopo: could not determine working directory")
-		return Topo{}, err
-	}
-
-	path := wd + "/topo.json"
-	return LoadTopoFile(path)
-}
-
-func LoadTopoFile(path string) (Topo, error) {
-
-	f, err := ioutil.ReadFile(path)
-	if err != nil {
-		return Topo{}, err
-	}
-	topo, err := ReadTopo(f)
-	if err != nil {
-		return Topo{}, err
-	}
-	return topo, nil
-
-}
-
-/*
-func LoadTopoByName(system string) (Topo, error) {
-	path := fmt.Sprintf("%s/%s/%s.json", SysDir(), system, system)
-	return LoadTopo(path)
-}
-*/
-
-/*
-func SysDir() string {
-	u, err := user.Current()
-	if err != nil {
-		log.Printf("error getting user: %v", err)
-	}
-	return u.HomeDir + "/.rvn/systems"
-}
-*/
-
-func WkDir() (string, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Printf("wkdir: could not determine working directory %v", err)
-		return "", err
-	}
-	return wd + "/.rvn", nil
-}
-
-func SrcDir() (string, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Printf("srcdir: could not determine working directory %v", err)
-		return "", err
-	}
-	return wd, nil
-}
-
-func ReadTopo(src []byte) (Topo, error) {
-	var topo Topo
-	err := json.Unmarshal(src, &topo)
-	if err != nil {
-		return topo, err
-	}
-
-	// apply defaults to any values not supplied by user
-	for i := 0; i < len(topo.Nodes); i++ {
-		fillInMissing(&topo.Nodes[i].Host)
-	}
-
-	for i := 0; i < len(topo.Switches); i++ {
-		fillInMissing(&topo.Switches[i].Host)
-	}
-
-	return topo, nil
 }
 
 func (t Topo) QualifyName(n string) string {
@@ -275,10 +164,7 @@ func (t Topo) String() string {
 	return s
 }
 
-type Runtime struct {
-	SubnetTable        [256]bool
-	SubnetReverseTable map[string]int
-}
+// Runtime --------------------------------------------------------------------
 
 func (r *Runtime) Save() {
 	data, err := json.MarshalIndent(r, "", "  ")
@@ -335,7 +221,110 @@ func (r *Runtime) FreeSubnet(tag string) {
 	}
 }
 
-type RebootRequest struct {
-	Topo  string   `json:"topo"`
-	Nodes []string `json:"nodes"`
+// Functions ==================================================================
+
+func RunModel() error {
+
+	// execute the javascript model
+	out, err := exec.Command(
+		"nodejs",
+		"/usr/local/lib/rvn/run_model.js",
+		"model.js",
+	).CombinedOutput()
+
+	if err != nil {
+		log.Printf("error running model")
+		log.Printf(string(out))
+		return err
+	}
+
+	// save the result of the model execution in the working directory
+	topo, err := ReadTopo(out)
+	if err != nil {
+		log.Printf("error reading topo %v", err)
+		return err
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Printf("cannot determine working directory %v", err)
+		return err
+	}
+	topo.Dir = wd
+
+	buf, err := json.MarshalIndent(topo, "", "  ")
+	if err != nil {
+		log.Printf("error marshalling topo %v", err)
+		return err
+	}
+
+	err = ioutil.WriteFile(".rvn/topo.json", buf, 0644)
+	if err != nil {
+		log.Printf("error writing topo %v", err)
+	}
+
+	return nil
+
+}
+
+func LoadTopo() (Topo, error) {
+
+	wd, err := WkDir()
+	if err != nil {
+		log.Printf("loadtopo: could not determine working directory")
+		return Topo{}, err
+	}
+
+	path := wd + "/topo.json"
+	return LoadTopoFile(path)
+}
+
+func LoadTopoFile(path string) (Topo, error) {
+
+	f, err := ioutil.ReadFile(path)
+	if err != nil {
+		return Topo{}, err
+	}
+	topo, err := ReadTopo(f)
+	if err != nil {
+		return Topo{}, err
+	}
+	return topo, nil
+
+}
+
+func WkDir() (string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Printf("wkdir: could not determine working directory %v", err)
+		return "", err
+	}
+	return wd + "/.rvn", nil
+}
+
+func SrcDir() (string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Printf("srcdir: could not determine working directory %v", err)
+		return "", err
+	}
+	return wd, nil
+}
+
+func ReadTopo(src []byte) (Topo, error) {
+	var topo Topo
+	err := json.Unmarshal(src, &topo)
+	if err != nil {
+		return topo, err
+	}
+
+	// apply defaults to any values not supplied by user
+	for i := 0; i < len(topo.Nodes); i++ {
+		fillInMissing(&topo.Nodes[i].Host)
+	}
+
+	for i := 0; i < len(topo.Switches); i++ {
+		fillInMissing(&topo.Switches[i].Host)
+	}
+
+	return topo, nil
 }

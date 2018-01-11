@@ -57,9 +57,10 @@ func GenConfig(h Host, topo Topo) {
 	}
 }
 
-//TODO errors anyone!!
 func Configure(withUserConfig bool) {
-	topo, err := loadTopo()
+	//TODO return error condition
+
+	topo, err := LoadTopo()
 	if err != nil {
 		log.Println("configure: failed to load topo - %v", err)
 		return

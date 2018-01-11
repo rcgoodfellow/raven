@@ -10,55 +10,33 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	//"time"
 )
+
+// Types ======================================================================
+
+// DomStatus encapsulates various information about a libvirt domain for
+// purposes of serialization and presentation.
+type DomStatus struct {
+	Name        string
+	State       string
+	ConfigState string
+	IP          string
+	Macs        []string
+	VNC         int
+}
+
+// Variables ==================================================================
 
 var conn *libvirt.Connect
 
-func connect() {
-	var err error
-	conn, err = libvirt.NewConnect("qemu:///system")
-	if err != nil {
-		log.Printf("libvirt connect failure: %v", err)
-	}
-}
-
-func isAlive() bool {
-	result, err := conn.IsAlive()
-	if err != nil {
-		log.Printf("error assesing connection liveness - %v", err)
-		return false
-	}
-	return result
-}
-
-func checkConnect() {
-	for conn == nil {
-		//log.Printf("connection nil - reconnecting")
-		connect()
-		//time.Sleep(1 * time.Millisecond)
-	}
-
-	for !isAlive() {
-		//log.Printf("connection dead - reconnecting")
-		connect()
-		//time.Sleep(1 * time.Millisecond)
-	}
-}
-
-/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- *
- * Public API Implementation
- *
- *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+// Functions ==================================================================
 
 // Create creates a libvirt definition for the supplied topology.  It does not
 // launch the system. For that functionality use the Launch function. If a
 // topology with the same name as the topology provided as an argument exists,
 // that topology will be overwritten by the system generated from the argument.
-
-//TODO need to return an error if shizz goes sideways
 func Create() {
+	//TODO need to return an error if shizz goes sideways
 
 	wd, err := WkDir()
 	if err != nil {
@@ -66,7 +44,7 @@ func Create() {
 		return
 	}
 
-	topo, err := loadTopo()
+	topo, err := LoadTopo()
 	if err != nil {
 		log.Printf("create failed to load topo")
 		return
@@ -192,9 +170,8 @@ func Create() {
 // Destroy completely wipes out a topology with the given name. If the system
 // is running within libvirt it is torn down. The entire definition of the
 // system is also removed from libvirt.
-
-//TODO return error on sideways
 func Destroy() {
+	//TODO return error on sideways
 	checkConnect()
 	dbCheckConnection()
 
@@ -204,7 +181,7 @@ func Destroy() {
 		return
 	}
 
-	topo, err := loadTopo()
+	topo, err := LoadTopo()
 	if err != nil {
 		//log.Printf("destroy: failed to load topo - %v", err)
 		//nothing to destroy
@@ -234,11 +211,12 @@ func Destroy() {
 	UnexportNFS(topo.Name)
 }
 
+// Shutdown turns of a virtual machine gracefully
 func Shutdown() []error {
 	checkConnect()
 	dbCheckConnection()
 
-	topo, err := loadTopo()
+	topo, err := LoadTopo()
 	if err != nil {
 		return []error{fmt.Errorf("shutdown: failed to load topo")}
 	}
@@ -269,12 +247,11 @@ func Shutdown() []error {
 // an error in launching. This function is asynchronous, when it returns the
 // system is still launching. Use the Status function to check up on a the
 // launch process.
-
-//TODO name should probably be something more like 'deploy'
 func Launch() []string {
+	//TODO name should probably be something more like 'deploy'
 	checkConnect()
 
-	topo, err := loadTopo()
+	topo, err := LoadTopo()
 	if err != nil {
 		err := fmt.Errorf("failed to load topo %v", err)
 		return []string{fmt.Sprintf("%v", err)}
@@ -351,17 +328,8 @@ func Launch() []string {
 	return errors
 }
 
-// DomStatus encapsulates various information about a libvirt domain for
-// purposes of serialization and presentation.
-type DomStatus struct {
-	Name        string
-	State       string
-	ConfigState string
-	IP          string
-	Macs        []string
-	VNC         int
-}
-
+// Domain info fetches the libvirt domain information about host within a
+// raven topology
 func DomainInfo(topo, name string) (*xlibvirt.Domain, error) {
 
 	checkConnect()
@@ -392,7 +360,7 @@ func Status() map[string]interface{} {
 
 	checkConnect()
 
-	topo, err := loadTopo()
+	topo, err := LoadTopo()
 	if err != nil {
 		log.Printf("status: failed to load topo - %v", err)
 		return nil
@@ -428,11 +396,71 @@ func Status() map[string]interface{} {
 	return status
 }
 
-/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- *
- * Helper functions
- *
- *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+// Domain status returns the current state of a domain (host) within a libvirt
+// topology.
+func DomainStatus(topo, name string) (DomStatus, error) {
+	checkConnect()
+	return domainStatus(topo, name, topo+"_"+name, conn), nil
+}
+
+// Reboot attempts to gracefully reboot a raven host
+func Reboot(rr RebootRequest) error {
+	checkConnect()
+
+	topo, err := LoadTopo()
+	if err != nil {
+		return err
+	}
+
+	for _, x := range rr.Nodes {
+
+		d, err := conn.LookupDomainByName(fmt.Sprintf("%s_%s", rr.Topo, x))
+		if err != nil {
+			continue
+		}
+
+		//seabios is not responsive to a reboot request, have to pull the plug
+		h := topo.getHost(x)
+		if h != nil && h.OS == "netboot" {
+			d.Reset(0)
+		} else {
+			d.Reboot(libvirt.DOMAIN_REBOOT_DEFAULT)
+		}
+
+	}
+
+	return nil
+
+}
+
+// Helper Functions ===========================================================
+
+func connect() {
+	var err error
+	conn, err = libvirt.NewConnect("qemu:///system")
+	if err != nil {
+		log.Printf("libvirt connect failure: %v", err)
+	}
+}
+
+func isAlive() bool {
+	result, err := conn.IsAlive()
+	if err != nil {
+		log.Printf("error assesing connection liveness - %v", err)
+		return false
+	}
+	return result
+}
+
+func checkConnect() {
+	for conn == nil {
+		connect()
+	}
+
+	for !isAlive() {
+		connect()
+	}
+}
 
 func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 
@@ -558,17 +586,6 @@ func domConnect(
 		})
 }
 
-func loadTopo() (Topo, error) {
-
-	/*
-		topoDir := SysDir() + "/" + name
-		path := topoDir + "/" + name + ".json"
-	*/
-
-	return LoadTopo()
-
-}
-
 func domainStatus(
 	topo, name, qname string, conn *libvirt.Connect,
 ) DomStatus {
@@ -618,11 +635,6 @@ func domainStatus(
 		x.Free()
 	}
 	return status
-}
-
-func DomainStatus(topo, name string) (DomStatus, error) {
-	checkConnect()
-	return domainStatus(topo, name, topo+"_"+name, conn), nil
 }
 
 func configStatus(topo, name string) string {
@@ -858,34 +870,5 @@ func cleanupRpcBind(net *libvirt.Network) {
 		log.Printf("error cleaning up nfs iptables tcp rule%s - %v", out, err)
 		return
 	}
-
-}
-
-func Reboot(rr RebootRequest) error {
-	checkConnect()
-
-	topo, err := LoadTopo()
-	if err != nil {
-		return err
-	}
-
-	for _, x := range rr.Nodes {
-
-		d, err := conn.LookupDomainByName(fmt.Sprintf("%s_%s", rr.Topo, x))
-		if err != nil {
-			continue
-		}
-
-		//seabios is not responsive to a reboot request, have to pull the plug
-		h := topo.getHost(x)
-		if h != nil && h.OS == "netboot" {
-			d.Reset(0)
-		} else {
-			d.Reboot(libvirt.DOMAIN_REBOOT_DEFAULT)
-		}
-
-	}
-
-	return nil
 
 }
