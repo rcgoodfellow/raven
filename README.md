@@ -27,7 +27,7 @@ walrus = {
 
 zwitch = {
   'name': 'nimbus',
-  'image': 'cumulus-latest',
+  'image': 'cumulusvx-3.5',
   'os': 'linux',
   'mounts': [{ 'source': env.AGXDIR, 'point': '/opt/agx' }]
 };
