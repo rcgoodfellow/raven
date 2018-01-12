@@ -781,6 +781,12 @@ func cleanupBOOTP(net *libvirt.Network) {
 		"-j", "ACCEPT").CombinedOutput()
 
 	if err != nil {
+		// don't bother reporting bad rule, that just means the rule does not exist
+		// and there is nothing to do. This can happen when a system is built but not
+		// run for example because the iptables rules only get created on launch
+		if strings.Contains(string(out), "Bad rule") {
+			return
+		}
 		log.Printf("error cleaning bootp iptables rules %s - %v", out, err)
 		return
 	}
@@ -845,6 +851,12 @@ func cleanupRpcBind(net *libvirt.Network) {
 		"-j", "ACCEPT").CombinedOutput()
 
 	if err != nil {
+		// don't bother reporting bad rule, that just means the rule does not exist
+		// and there is nothing to do. This can happen when a system is built but not
+		// run for example because the iptables rules only get created on launch
+		if strings.Contains(string(out), "Bad rule") {
+			return
+		}
 		log.Printf("error cleaning up iptables rpcbind tcp rule %s - %v", out, err)
 		return
 	}
