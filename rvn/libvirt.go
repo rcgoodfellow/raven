@@ -218,6 +218,10 @@ func Shutdown() []error {
 
 	topo, err := LoadTopo()
 	if err != nil {
+		if strings.Contains(err.Error(), "topo.json: no such file or directory") {
+			log.Printf("Topology not built. Use `rvn build` first")
+			return []error{}
+		}
 		return []error{fmt.Errorf("shutdown: failed to load topo")}
 	}
 
@@ -253,6 +257,10 @@ func Launch() []string {
 
 	topo, err := LoadTopo()
 	if err != nil {
+		if strings.Contains(err.Error(), "topo.json: no such file or directory") {
+			log.Printf("Topology not built. Use `rvn build` first")
+			return []string{}
+		}
 		err := fmt.Errorf("failed to load topo %v", err)
 		return []string{fmt.Sprintf("%v", err)}
 	}
@@ -362,6 +370,10 @@ func Status() map[string]interface{} {
 
 	topo, err := LoadTopo()
 	if err != nil {
+		if strings.Contains(err.Error(), "topo.json: no such file or directory") {
+			log.Printf("Topology not built. Use `rvn build` first")
+			return nil
+		}
 		log.Printf("status: failed to load topo - %v", err)
 		return nil
 	}

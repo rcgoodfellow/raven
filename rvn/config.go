@@ -62,6 +62,10 @@ func Configure(withUserConfig bool) {
 
 	topo, err := LoadTopo()
 	if err != nil {
+		if strings.Contains(err.Error(), "topo.json: no such file or directory") {
+			log.Printf("Topology not built. Use `rvn build` first")
+			return
+		}
 		log.Println("configure: failed to load topo - %v", err)
 		return
 	}
