@@ -112,18 +112,6 @@ func Create() {
 
 		nets[link.Name] = n
 
-		/*
-			for _, e := range link.Endpoints {
-				d := doms[e.Name]
-				h := topo.getHost(e.Name)
-				if h == nil {
-					log.Printf("unknown host in link %s", e.Name)
-					continue
-				}
-				domConnect(topo.QualifyName(link.Name), topo.getHost(e.Name), d, link.Props)
-			}
-		*/
-
 	}
 
 	resolveLinks(&topo)
