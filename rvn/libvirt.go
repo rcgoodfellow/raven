@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 )
 
@@ -103,22 +104,47 @@ func Create() {
 	}
 
 	for _, link := range topo.Links {
+
 		n := &xlibvirt.Network{
 			Name:   topo.QualifyName(link.Name),
 			Bridge: &xlibvirt.NetworkBridge{Delay: "0", STP: "off"},
 		}
 
-		for _, e := range link.Endpoints {
-			d := doms[e.Name]
-			h := topo.getHost(e.Name)
-			if h == nil {
-				log.Printf("unknown host in link %s", e.Name)
-				continue
-			}
-			domConnect(topo.QualifyName(link.Name), topo.getHost(e.Name), d, link.Props)
-		}
-
 		nets[link.Name] = n
+
+		/*
+			for _, e := range link.Endpoints {
+				d := doms[e.Name]
+				h := topo.getHost(e.Name)
+				if h == nil {
+					log.Printf("unknown host in link %s", e.Name)
+					continue
+				}
+				domConnect(topo.QualifyName(link.Name), topo.getHost(e.Name), d, link.Props)
+			}
+		*/
+
+	}
+
+	resolveLinks(&topo)
+
+	for _, x := range topo.Nodes {
+		for _, p := range x.ports {
+			domConnect(
+				topo.QualifyName(p.Link),
+				&x.Host,
+				doms[x.Name],
+				topo.getLink(p.Link).Props)
+		}
+	}
+	for _, x := range topo.Switches {
+		for _, p := range x.ports {
+			domConnect(
+				topo.QualifyName(p.Link),
+				&x.Host,
+				doms[x.Name],
+				topo.getLink(p.Link).Props)
+		}
 	}
 
 	data, _ := json.MarshalIndent(topo, "", "  ")
@@ -596,6 +622,26 @@ func domConnect(
 			Model: &xlibvirt.DomainInterfaceModel{Type: "virtio"},
 			Boot:  boot,
 		})
+}
+
+func resolveLinks(t *Topo) {
+
+	// 'plug in' the link to each node
+	for _, l := range t.Links {
+		for _, e := range l.Endpoints {
+			h := t.getHost(e.Name)
+			h.ports = append(h.ports, Port{l.Name, e.Port})
+		}
+	}
+
+	// sort the links at each node by index
+	for i := 0; i < len(t.Nodes); i++ {
+		n := &t.Nodes[i]
+		sort.Slice(n.ports, func(i, j int) bool {
+			return n.ports[i].Index < n.ports[j].Index
+		})
+	}
+
 }
 
 func domainStatus(

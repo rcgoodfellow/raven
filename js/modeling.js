@@ -41,8 +41,8 @@ Nic = (n, speed, i) => Array(n).fill({'speed': speed, 'nic': i});
 
 Link = (a, pa, b, pb, props = {}) => ({
     'endpoints': [
-      {'name': a, 'port': pa.toString()},
-      {'name': b, 'port': pb.toString()}
+      {'name': a, 'port': pa},
+      {'name': b, 'port': pb}
     ],
     'name': `${a}_${pa}-${b}_${pb}`,
     'props': props

@@ -32,6 +32,11 @@ type Memory struct {
 	Capacity UnitValue `json:"capacity"`
 }
 
+type Port struct {
+	Link  string
+	Index int
+}
+
 type Host struct {
 	Name      string  `json:"name"`
 	Image     string  `json:"image"`
@@ -40,6 +45,9 @@ type Host struct {
 	Mounts    []Mount `json:"mounts"`
 	CPU       *CPU    `json:"cpu,omitempty"`
 	Memory    *Memory `json:"memory,omitempty"`
+
+	// internal use only
+	ports []Port `json:"-"`
 }
 
 type Zwitch struct {
@@ -52,7 +60,7 @@ type Node struct {
 
 type Endpoint struct {
 	Name string `json:"name"`
-	Port string `json:"port"`
+	Port int    `json:"port"`
 }
 
 type Link struct {
@@ -138,6 +146,15 @@ func (t *Topo) getHost(name string) *Host {
 	for i, x := range t.Switches {
 		if x.Name == name {
 			return &t.Switches[i].Host
+		}
+	}
+	return nil
+}
+
+func (t *Topo) getLink(name string) *Link {
+	for i, x := range t.Links {
+		if x.Name == name {
+			return &t.Links[i]
 		}
 	}
 	return nil
