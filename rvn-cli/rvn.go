@@ -28,7 +28,7 @@ func main() {
 	case "deploy":
 		doDeploy()
 	case "configure":
-		doConfigure()
+		doConfigure(os.Args[2:])
 	case "shutdown":
 		doShutdown()
 	case "destroy":
@@ -66,6 +66,11 @@ func main() {
 			usage()
 		}
 		doPingwait(os.Args[2:])
+	case "wipe":
+		if len(os.Args) < 3 {
+			usage()
+		}
+		doWipe(os.Args[2:])
 
 	default:
 		usage()
@@ -102,8 +107,19 @@ func doStatus() {
 
 }
 
-func doConfigure() {
-	rvn.Configure(true)
+func doConfigure(args []string) {
+	if len(args) == 0 {
+		rvn.Configure(true)
+	} else {
+		topo, err := rvn.LoadTopo()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, x := range args {
+			rvn.ConfigureNode(topo, x)
+		}
+	}
 }
 
 func doDeploy() {
@@ -356,6 +372,22 @@ func doPing(host string) bool {
 
 }
 
+func doWipe(args []string) {
+
+	topo, err := rvn.LoadTopo()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, x := range args {
+		err = rvn.WipeNode(topo, x)
+		if err != nil {
+			log.Println("%v", err)
+		}
+	}
+
+}
+
 func checkDir() {
 	err := os.MkdirAll(".rvn", 0755)
 	if err != nil {
@@ -368,7 +400,8 @@ func domString(ds rvn.DomStatus) string {
 	if state == "running" {
 		state = green(state)
 	}
-	return fmt.Sprintf("  %s %s %s %s", ds.Name, state, yellow(ds.ConfigState), ds.IP)
+	return fmt.Sprintf(
+		"  %s %s %s %s", ds.Name, state, yellow(ds.ConfigState), ds.IP)
 }
 
 func usage() {
@@ -384,9 +417,11 @@ func usage() {
 	s += fmt.Sprintf("  %s %s node\n", blue("rvn"), green("ssh"))
 	s += fmt.Sprintf("  %s %s node\n", blue("rvn"), green("ip"))
 	s += fmt.Sprintf("  %s %s node\n", blue("rvn"), green("vnc"))
-	s += fmt.Sprintf("  %s %s node script.yml\n", blue("rvn"), green("ansible"))
+	s += fmt.Sprintf("  %s %s node-1 ... node-n\n", blue("rvn"), green("configure"))
 	s += fmt.Sprintf("  %s %s node-1 ... node-n\n", blue("rvn"), green("reboot"))
-	s += fmt.Sprintf("  %s %s node-1 ... node-n", blue("rvn"), green("pingwait"))
+	s += fmt.Sprintf("  %s %s node-1 ... node-n\n", blue("rvn"), green("pingwait"))
+	s += fmt.Sprintf("  %s %s node-1 ... node-n\n", blue("rvn"), green("wipe"))
+	s += fmt.Sprintf("  %s %s node script.yml", blue("rvn"), green("ansible"))
 
 	log.Fatal(s)
 }

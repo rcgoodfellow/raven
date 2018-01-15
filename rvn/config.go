@@ -74,25 +74,10 @@ func Configure(withUserConfig bool) {
 	node_status := status["nodes"].(map[string]DomStatus)
 	switch_status := status["switches"].(map[string]DomStatus)
 
-	wd, err := WkDir()
-	if err != nil {
-		log.Printf("configure: failed to get working dir")
-		return
-	}
-
 	var wg sync.WaitGroup
 	doConfig := func(topo Topo, host Host, ds DomStatus) {
-		yml := fmt.Sprintf("%s/%s.yml", wd, host.Name)
-		log.Printf("running base config for %s:%s", topo.Name, host.Name)
-		runConfig(yml, topo.Name, host, ds)
 
-		user_yml := fmt.Sprintf("%s/config/%s.yml", topo.Dir, host.Name)
-		if _, err := os.Stat(user_yml); err == nil {
-			if withUserConfig {
-				log.Printf("running user config for %s:%s", topo.Name, host.Name)
-				runConfig(user_yml, topo.Name, host, ds)
-			}
-		}
+		configureNode(topo, host, ds, withUserConfig)
 		wg.Done()
 	}
 
@@ -136,7 +121,44 @@ func preConfigure(topo Topo) {
 
 }
 
-func runConfig(yml, topo string, h Host, s DomStatus) {
+func ConfigureNode(topo Topo, node string) {
+	status := Status()
+	node_status := status["nodes"].(map[string]DomStatus)
+	switch_status := status["switches"].(map[string]DomStatus)
+
+	s, ok := node_status[node]
+	h := topo.getHost(node)
+	if ok {
+		configureNode(topo, *h, s, true)
+	} else if s, ok := switch_status[node]; ok {
+		configureNode(topo, *h, s, true)
+	}
+
+}
+
+func configureNode(topo Topo, host Host, ds DomStatus, withUserConfig bool) {
+
+	wd, err := WkDir()
+	if err != nil {
+		log.Printf("configure: failed to get working dir")
+		return
+	}
+
+	yml := fmt.Sprintf("%s/%s.yml", wd, host.Name)
+	log.Printf("running base config for %s:%s", topo.Name, host.Name)
+	runAnsible(yml, topo.Name, host, ds)
+
+	user_yml := fmt.Sprintf("%s/config/%s.yml", topo.Dir, host.Name)
+	if _, err := os.Stat(user_yml); err == nil {
+		if withUserConfig {
+			log.Printf("running user config for %s:%s", topo.Name, host.Name)
+			runAnsible(user_yml, topo.Name, host, ds)
+		}
+	}
+
+}
+
+func runAnsible(yml, topo string, h Host, s DomStatus) {
 
 	dbCheckConnection()
 	db_state_key := fmt.Sprintf("config_state:%s:%s", topo, h.Name)

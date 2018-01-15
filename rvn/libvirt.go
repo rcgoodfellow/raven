@@ -1,5 +1,8 @@
 package rvn
 
+// TODO
+//   - better error diagnostics and propagation
+
 import (
 	"encoding/json"
 	"fmt"
@@ -256,6 +259,40 @@ func Shutdown() []error {
 		return errs
 	}
 	return nil
+}
+
+func WipeNode(topo Topo, name string) error {
+	checkConnect()
+	dbCheckConnection()
+	h := topo.getHost(name)
+	if h == nil {
+		return fmt.Errorf("host %s does not exist", name)
+	}
+	destroyDomain(topo.QualifyName(name), conn)
+	d := newDom(h, &topo)
+
+	if !h.NoTestNet {
+		domConnect(topo.QualifyName("test"), h, d, nil)
+	}
+	resolveLinks(&topo)
+	for _, p := range h.ports {
+		domConnect(
+			topo.QualifyName(p.Link),
+			h,
+			d,
+			topo.getLink(p.Link).Props)
+	}
+
+	xml, err := d.Marshal()
+	if err != nil {
+		return fmt.Errorf("error marshalling domain %v", err)
+	}
+
+	dom, err := conn.DomainDefineXML(xml)
+	if err != nil {
+		return fmt.Errorf("error defining domain %v", err)
+	}
+	return dom.Create()
 }
 
 // Launch brings up the system with the given name. This system must exist
