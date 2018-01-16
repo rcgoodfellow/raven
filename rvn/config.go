@@ -133,6 +133,36 @@ func ConfigureNode(topo Topo, node string) {
 	} else if s, ok := switch_status[node]; ok {
 		configureNode(topo, *h, s, true)
 	}
+}
+
+func ConfigureNodes(topo Topo, nodes []string) {
+	status := Status()
+	node_status := status["nodes"].(map[string]DomStatus)
+	switch_status := status["switches"].(map[string]DomStatus)
+
+	var wg sync.WaitGroup
+	doConfig := func(topo Topo, host string, ds DomStatus) {
+
+		s, ok := node_status[host]
+		h := topo.getHost(host)
+		if ok {
+			configureNode(topo, *h, s, true)
+		} else if s, ok := switch_status[host]; ok {
+			configureNode(topo, *h, s, true)
+		}
+
+		wg.Done()
+
+	}
+
+	for _, x := range nodes {
+		wg.Add(1)
+		go doConfig(topo, x, node_status[x])
+	}
+
+	wg.Wait()
+
+	log.Println("configuration of all nodes complete")
 
 }
 

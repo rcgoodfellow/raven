@@ -116,9 +116,7 @@ func doConfigure(args []string) {
 			log.Fatal(err)
 		}
 
-		for _, x := range args {
-			rvn.ConfigureNode(topo, x)
-		}
+		rvn.ConfigureNodes(topo, args)
 	}
 }
 
