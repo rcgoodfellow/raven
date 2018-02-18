@@ -562,9 +562,15 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 			Type: &xlibvirt.DomainOSType{Type: "hvm"},
 		},
 		CPU: &xlibvirt.DomainCPU{
-			Model: &xlibvirt.DomainCPUModel{
-				Value: h.CPU.Model,
-			},
+			/*
+				TODO: prefer a bit more discrimination than pure passthrough ....
+
+				Match: "minimum",
+				Model: &xlibvirt.DomainCPUModel{
+					Value: h.CPU.Model,
+				},
+			*/
+			Mode: "host-passthrough",
 			Topology: &xlibvirt.DomainCPUTopology{
 				Sockets: h.CPU.Sockets,
 				Cores:   h.CPU.Cores,
