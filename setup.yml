@@ -24,6 +24,7 @@
         libvirt_dev_package: libvirt-dev
         qemu_utils_package: qemu-utils
         nfs_package: nfs-kernel-server
+        golang_package: golang
       when: ansible_distribution == "Debian"
       
     - name: compute package names
@@ -35,6 +36,7 @@
         libvirt_dev_package: libvirt-dev
         qemu_utils_package: qemu-utils
         nfs_package: nfs-kernel-server
+        golang_package: golang-1.9
       when: ansible_distribution == "Ubuntu"
     
     - name: compute package names
@@ -46,6 +48,7 @@
         libvirt_dev_package: libvirt-devel
         qemu_utils_package: qemu-common
         nfs_package: nfs-utils
+        golang_package: golang
       when: ansible_distribution == "Fedora"
 
 
@@ -55,7 +58,7 @@
         - "{{devel_package}}"
         - "{{redis_package}}"
         - git
-        - golang
+        - "{{golang_package}}"
         - "{{libvirtd_package}}"
         - "{{libvirt_dev_package}}"
         - nodejs
@@ -148,6 +151,13 @@
       with_items:
         - export GOPATH=/root/.go
         - PATH=$GOPATH/bin:$PATH
+
+    - name: alternative go link created
+      alternatives:
+        name: go
+        link: /usr/bin/go
+        path: /usr/lib/go-1.9/bin/go
+      when: ansible_distribution == "Ubuntu"
 
     - name: init runtime file
       shell: echo "{}" > /var/rvn/run
