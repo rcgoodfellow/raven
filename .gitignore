@@ -24,3 +24,6 @@ runsync.sh
 
 ## raven working directories
 .rvn
+
+build
+vendor

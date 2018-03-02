@@ -68,6 +68,13 @@ ansible-playbook setup.yml
 
 ```
 
+### Building
+You will need at least Go 1.8 to build. Then from this directory
+```
+dep ensure
+make
+```
+
 ### Tinkering
 First start the raven application (you must be root due to the way we use libvirt)
 
