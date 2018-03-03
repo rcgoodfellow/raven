@@ -125,7 +125,7 @@ var defaults = struct {
 		Model: "cortex-a9",
 	},
 	Platform:     "x86_64",
-	X86Machine:   "x86_64",
+	X86Machine:   "pc-i440fx-2.10",
 	Arm7Machine:  "vexpress-a9",
 	DroidMachine: "auto",
 }
