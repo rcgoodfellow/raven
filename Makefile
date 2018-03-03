@@ -1,7 +1,7 @@
 all: \
 	build/rvn
 
-build/rvn: rvn-cli/rvn.go | build
+build/rvn: rvn-cli/rvn.go rvn/*.go| build
 	go build -o build/rvn rvn-cli/rvn.go
 
 build:

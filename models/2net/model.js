@@ -25,7 +25,7 @@
 
 controller = {
   'name': 'control',
-  'image': 'debian-latest',
+  'image': 'debian-stretch',
   'os': 'linux',
   'cpu': {
     'cores': 4
@@ -40,7 +40,7 @@ controller = {
 
 walrus = {
   'name': 'walrus',
-  'image': 'debian-latest',
+  'image': 'debian-stretch',
   'os': 'linux',
   'cpu': {
     'cores': 1
@@ -68,7 +68,7 @@ zwitch = {
 
 nodes = Range(2).map(i => ({
   'name': `n${i}`,
-  'image': 'debian-latest',
+  'image': 'debian-stretch',
   'os': 'linux',
   'cpu': {
     'cores': 4
@@ -83,9 +83,9 @@ nodes = Range(2).map(i => ({
 }));
 
 links = [
-  Link('walrus', 'eth0', 'nimbus', 'swp1'),
-  Link('control', 'eth0', 'nimbus', 'swp2'),
-  ...Range(2).map(i => Link(`n${i}`, 'eth0', 'nimbus', `swp${i+3}`)),
+  Link('walrus', 1, 'nimbus', 1),
+  Link('control', 1, 'nimbus', 2),
+  ...Range(2).map(i => Link(`n${i}`, 1, 'nimbus', i+3)),
 ]
 
 topo = {

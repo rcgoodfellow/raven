@@ -39,6 +39,8 @@ type Port struct {
 
 type Host struct {
 	Name      string  `json:"name"`
+	Platform  string  `json:"platform"`
+	Kernel    string  `json:"kernel"`
 	Image     string  `json:"image"`
 	OS        string  `json:"os"`
 	NoTestNet bool    `json:"no-testnet"`
@@ -91,8 +93,15 @@ type RebootRequest struct {
 // Default Values =============================================================
 
 var defaults = struct {
-	Memory *Memory
-	CPU    *CPU
+	Memory       *Memory
+	CPU          *CPU
+	Arm7CPU      *CPU
+	X86_64CPU    *CPU
+	DroidCPU     *CPU
+	Platform     string
+	X86Machine   string
+	Arm7Machine  string
+	DroidMachine string
 }{
 	Memory: &Memory{
 		Capacity: UnitValue{
@@ -104,8 +113,21 @@ var defaults = struct {
 		Sockets: 1,
 		Cores:   1,
 		Threads: 1,
-		Model:   "kvm64",
 	},
+	X86_64CPU: &CPU{
+		Model: "kvm64",
+	},
+	// droid is x86 droid by default for now
+	DroidCPU: &CPU{
+		Model: "kvm64",
+	},
+	Arm7CPU: &CPU{
+		Model: "cortex-a9",
+	},
+	Platform:     "x86_64",
+	X86Machine:   "x86_64",
+	Arm7Machine:  "vexpress-a9",
+	DroidMachine: "auto",
 }
 
 func fillInMissing(h *Host) {
@@ -126,8 +148,20 @@ func fillInMissing(h *Host) {
 		if h.CPU.Threads == 0 {
 			h.CPU.Threads = 1
 		}
+	}
+	if h.Platform == "" || h.Platform == "x86_64" {
 		if h.CPU.Model == "" {
-			h.CPU.Model = "kvm64"
+			h.CPU.Model = defaults.X86_64CPU.Model
+		}
+	}
+	if h.Platform == "arm7" {
+		if h.CPU.Model == "" {
+			h.CPU.Model = defaults.Arm7CPU.Model
+		}
+	}
+	if h.Platform == "android" {
+		if h.CPU.Model == "" {
+			h.CPU.Model = defaults.DroidCPU.Model
 		}
 	}
 
