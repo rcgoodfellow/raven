@@ -7,13 +7,14 @@
 
 thing = {
   'name': 'thing',
-  'platform': 'arm-7',
-  'kernel': 'u-boot:net',
+  'platform': 'arm7',
+  'kernel': 'u-boot:a9',
   'os': 'linux',
-  'cpu': { 'cores': 2 },
+  'cpu': { 'cores': 1 },
   'memory': { 'capacity': GB(1) }
 };
 
+/*
 droid = {
   'name': 'droid',
   'platform': 'android',
@@ -38,15 +39,19 @@ sw = {
   'image': 'cumulusvx-3.5',
   'os': 'linux'
 };
+*/
 
 topo = {
   'name': 'small-world',
-  'nodes': [thing, droid, server],
-  'switches': [sw],
-  'links': [
+  'nodes': [thing/*, droid, server*/],
+  'switches': [/*sw*/],
+  'links': [/*
     Link('thing', 1, 'sw', 1),
     Link('droid', 1, 'sw', 2),
     Link('server', 1, 'sw', 3)
-  ]
+  */],
+  'options': {
+    'display': 'local'
+  }
 }
 

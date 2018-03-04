@@ -59,6 +59,7 @@
         - "{{libvirt_dev_package}}"
         - nodejs
         - qemu-kvm
+        - qemu-system-arm
         - "{{qemu_utils_package}}"
         - "{{nfs_package}}"
 
@@ -74,6 +75,7 @@
       file: path={{item.path}} state={{item.state}}
       with_items:
         - {path: /var/rvn/img, state: directory}
+        - {path: /var/rvn/kernel, state: directory}
         - {path: /var/rvn/template, state: directory}
         - {path: /var/rvn/run, state: touch}
         - {path: /var/rvn/ssh, state: directory}

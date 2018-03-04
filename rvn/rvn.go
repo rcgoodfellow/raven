@@ -39,7 +39,9 @@ type Port struct {
 
 type Host struct {
 	Name      string  `json:"name"`
+	Arch      string  `json:"arch"`
 	Platform  string  `json:"platform"`
+	Machine   string  `json:"machine"`
 	Kernel    string  `json:"kernel"`
 	Image     string  `json:"image"`
 	OS        string  `json:"os"`
@@ -71,6 +73,10 @@ type Link struct {
 	Props     map[string]interface{} `json:"props"`
 }
 
+type Options struct {
+	Display string `json:"display"`
+}
+
 type Topo struct {
 	Name     string   `json:"name"`
 	Nodes    []Node   `json:"nodes"`
@@ -78,6 +84,7 @@ type Topo struct {
 	Links    []Link   `json:"links"`
 	Dir      string   `json:"dir"`
 	MgmtIp   string   `json:"mgmtip"`
+	Options  Options  `json:"options"`
 }
 
 type Runtime struct {
@@ -91,79 +98,164 @@ type RebootRequest struct {
 }
 
 // Default Values =============================================================
+//
+// The default values are organized by platform. Each platform provides a basic
+// set of default configuration variables sufficent to start a vm under that
+// platform with no user specified configuration. Every new platform must
+// support this runnable by convention model
+
+type Platform struct {
+	Name    string
+	Arch    string
+	Machine string
+	CPU     *CPU
+	Memory  *Memory
+	Kernel  string
+	Image   string
+}
 
 var defaults = struct {
-	Memory       *Memory
-	CPU          *CPU
-	Arm7CPU      *CPU
-	X86_64CPU    *CPU
-	DroidCPU     *CPU
-	Platform     string
-	X86Machine   string
-	Arm7Machine  string
-	DroidMachine string
+	X86_64  *Platform
+	Arm     *Platform
+	Android *Platform
 }{
-	Memory: &Memory{
-		Capacity: UnitValue{
-			Value: 4,
-			Unit:  "GB",
-		},
+	X86_64: &Platform{
+		Name:    "x86_64",
+		Arch:    "x86_64",
+		Machine: "pc-i440fx-2.10",
+		CPU:     &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "kvm64"},
+		Memory:  &Memory{Capacity: UnitValue{Value: 4, Unit: "GB"}},
+		Image:   "fedora-27",
 	},
-	CPU: &CPU{
-		Sockets: 1,
-		Cores:   1,
-		Threads: 1,
+	Arm: &Platform{
+		Name:    "arm7",
+		Arch:    "armv7l",
+		Machine: "vexpress-a9",
+		CPU:     &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "cortex-a9"},
+		Memory:  &Memory{Capacity: UnitValue{Value: 1, Unit: "GB"}},
+		Kernel:  "u-boot:a9",
+		Image:   "raspbian:a9", //TODO s/raspbian/alpine/g
 	},
-	X86_64CPU: &CPU{
-		Model: "kvm64",
+	Android: &Platform{
+		Name:    "android",
+		Arch:    "x86_64",
+		Machine: "auto",
+		CPU:     &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "kvm64"},
+		Memory:  &Memory{Capacity: UnitValue{Value: 2, Unit: "GB"}},
+		Image:   "oreo",
 	},
-	// droid is x86 droid by default for now
-	DroidCPU: &CPU{
-		Model: "kvm64",
-	},
-	Arm7CPU: &CPU{
-		Model: "cortex-a9",
-	},
-	Platform:     "x86_64",
-	X86Machine:   "pc-i440fx-2.10",
-	Arm7Machine:  "vexpress-a9",
-	DroidMachine: "auto",
 }
 
 func fillInMissing(h *Host) {
-	if h.Memory == nil {
-		h.Memory = defaults.Memory
+	if h.Platform == "" {
+		h.Platform = "x86_64"
 	}
-	if h.CPU == nil {
-		h.CPU = defaults.CPU
-	} else {
-		//if these values are omitted by the user they are zero, but that is not
-		//an appropriate default value e.g., there is no computer with 0 sockets
-		if h.CPU.Sockets == 0 {
-			h.CPU.Sockets = 1
+
+	switch h.Platform {
+
+	case "x86_64":
+		h.Arch = defaults.X86_64.Arch
+		if h.Machine == "" {
+			h.Machine = defaults.X86_64.Machine
 		}
-		if h.CPU.Cores == 0 {
-			h.CPU.Cores = 1
+		applyCPUDefaults(&h.CPU, defaults.X86_64.CPU)
+		applyMemoryDefaults(&h.Memory, defaults.X86_64.Memory)
+		if h.Image == "" {
+			h.Image = defaults.X86_64.Image
 		}
-		if h.CPU.Threads == 0 {
-			h.CPU.Threads = 1
+
+	case "arm7":
+		h.Arch = defaults.Arm.Arch
+		if h.Machine == "" {
+			h.Machine = defaults.Arm.Machine
 		}
+		applyCPUDefaults(&h.CPU, defaults.Arm.CPU)
+		applyMemoryDefaults(&h.Memory, defaults.Arm.Memory)
+		if h.Image == "" {
+			h.Image = defaults.Arm.Image
+		}
+		if h.Kernel == "" {
+			h.Kernel = defaults.Arm.Kernel
+		}
+
+	case "android":
+		h.Arch = defaults.Android.Arch
+		if h.Machine == "" {
+			h.Machine = defaults.Android.Machine
+		}
+		applyCPUDefaults(&h.CPU, defaults.Android.CPU)
+		applyMemoryDefaults(&h.Memory, defaults.Android.Memory)
+		if h.Image == "" {
+			h.Image = defaults.Android.Image
+		}
+
 	}
-	if h.Platform == "" || h.Platform == "x86_64" {
-		if h.CPU.Model == "" {
-			h.CPU.Model = defaults.X86_64CPU.Model
-		}
+
+}
+
+func applyCPUDefaults(to **CPU, from *CPU) {
+	if *to == nil {
+		*to = new(CPU)
 	}
-	if h.Platform == "arm7" {
-		if h.CPU.Model == "" {
-			h.CPU.Model = defaults.Arm7CPU.Model
-		}
+	if (*to).Model == "" {
+		(*to).Model = from.Model
 	}
-	if h.Platform == "android" {
-		if h.CPU.Model == "" {
-			h.CPU.Model = defaults.DroidCPU.Model
-		}
+	if (*to).Sockets == 0 {
+		(*to).Sockets = from.Sockets
 	}
+	if (*to).Cores == 0 {
+		(*to).Cores = from.Cores
+	}
+	if (*to).Threads == 0 {
+		(*to).Threads = from.Threads
+	}
+}
+
+func applyMemoryDefaults(to **Memory, from *Memory) {
+	if *to == nil {
+		*to = new(Memory)
+	}
+	if (*to).Capacity.Value == 0 || (*to).Capacity.Unit == "" {
+		(*to).Capacity = from.Capacity
+	}
+}
+
+func findKernel(h *Host) string {
+
+	var defaultKernel string
+	switch h.Arch {
+	case "armv7l":
+		defaultKernel = defaults.Arm.Kernel
+	case "Android":
+		defaultKernel = ""
+	case "x86_64":
+		defaultKernel = ""
+	default:
+		defaultKernel = ""
+	}
+
+	// first: try to find the referenced kernel in the local directory
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Printf(
+			"findKernel: error getting working directory - using default kernel")
+		return fmt.Sprintf("/var/rvn/kernel/%s", defaultKernel)
+	}
+	_, err = os.Stat(fmt.Sprintf("%s/%s", wd, h.Kernel))
+	if err == nil {
+		return fmt.Sprintf("/%s/%s", wd, h.Kernel)
+	}
+
+	// second: if we cant find the referenced kernel locally, try to find the
+	// it in the rvn installation directory
+	_, err = os.Stat(fmt.Sprintf("/var/rvn/kernel/%s", h.Kernel))
+	if err == nil {
+		return fmt.Sprintf("/var/rvn/kernel/%s", h.Kernel)
+	}
+
+	log.Printf(
+		"findKernel: kernel '%s' not found - using default kernel", h.Kernel)
+	return fmt.Sprintf("/var/rvn/kernel/%s", defaultKernel)
 
 }
 

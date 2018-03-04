@@ -6,14 +6,16 @@ package rvn
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/libvirt/libvirt-go"
-	xlibvirt "github.com/libvirt/libvirt-go-xml"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"sort"
+	"strconv"
 	"strings"
+
+	"github.com/libvirt/libvirt-go"
+	xlibvirt "github.com/libvirt/libvirt-go-xml"
 )
 
 // Types ======================================================================
@@ -500,7 +502,7 @@ func Reboot(rr RebootRequest) error {
 
 func connect() {
 	var err error
-	conn, err = libvirt.NewConnect("qemu:///system")
+	conn, err = libvirt.NewConnect("qemu:///session")
 	if err != nil {
 		log.Printf("libvirt connect failure: %v", err)
 	}
@@ -527,28 +529,27 @@ func checkConnect() {
 
 func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 
-	wd, err := WkDir()
-	if err != nil {
-		log.Printf("newdom: failed to get working dir")
-		return nil
+	switch h.Platform {
+
+	case "x86_64":
+		return x86Dom(h, t)
+
+	case "arm7":
+		return arm7Dom(h, t)
+
+	default:
+		log.Printf("unrecognized platform - using x86_64")
+		return x86Dom(h, t)
+
 	}
 
-	baseImage := "/var/rvn/img/" + h.Image + ".qcow2"
-	instanceImage := wd + "/" + h.Name + ".qcow2"
-	exec.Command("rm", "-f", instanceImage).Run()
+}
 
-	out, err := exec.Command(
-		"qemu-img",
-		"create",
-		"-f",
-		"qcow2",
-		"-o", "backing_file="+baseImage,
-		instanceImage).CombinedOutput()
+func x86Dom(h *Host, t *Topo) *xlibvirt.Domain {
 
-	if err != nil {
-		log.Printf("error creating image file for %s", h.Name)
-		log.Printf("%v", err)
-		log.Printf("%s", out)
+	instanceImage := createImage(h)
+	if instanceImage == "" {
+		return nil
 	}
 
 	d := &xlibvirt.Domain{
@@ -624,6 +625,195 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 	}
 
 	return d
+
+}
+
+func createGraphics(t *Topo) xlibvirt.DomainGraphic {
+	switch t.Options.Display {
+	case "local":
+		return xlibvirt.DomainGraphic{
+			Desktop: &xlibvirt.DomainGraphicDesktop{
+				Display: "gtk",
+			},
+		}
+	default:
+		return xlibvirt.DomainGraphic{
+			VNC: &xlibvirt.DomainGraphicVNC{
+				Port:     -1,
+				AutoPort: "yes",
+			},
+		}
+	}
+}
+
+func createImage(h *Host) string {
+
+	wd, err := WkDir()
+	if err != nil {
+		log.Printf("newdom: failed to get working dir")
+		return ""
+	}
+
+	baseImage := "/var/rvn/img/" + h.Image + ".qcow2"
+	instanceImage := wd + "/" + h.Name + ".qcow2"
+	exec.Command("rm", "-f", instanceImage).Run()
+
+	out, err := exec.Command(
+		"qemu-img",
+		"create",
+		"-f",
+		"qcow2",
+		"-o", "backing_file="+baseImage,
+		instanceImage).CombinedOutput()
+
+	if err != nil {
+		log.Printf("error creating image file for %s", h.Name)
+		log.Printf("%v", err)
+		log.Printf("%s", out)
+	}
+
+	return instanceImage
+
+}
+
+func arm7Dom(h *Host, t *Topo) *xlibvirt.Domain {
+
+	instanceImage := createImage(h)
+	if instanceImage == "" {
+		return nil
+	}
+
+	// construct the vm
+	d := &xlibvirt.Domain{
+		Type: "qemu",
+		Name: t.QualifyName(h.Name),
+		OS: &xlibvirt.DomainOS{
+			Type: &xlibvirt.DomainOSType{
+				Type:    "hvm",
+				Arch:    h.Arch,
+				Machine: h.Machine,
+			},
+			Kernel: findKernel(h),
+		},
+		CPU: &xlibvirt.DomainCPU{
+			Mode:  "custom",
+			Match: "exact",
+			Topology: &xlibvirt.DomainCPUTopology{
+				Sockets: h.CPU.Sockets,
+				Cores:   h.CPU.Cores,
+				Threads: h.CPU.Threads,
+			},
+			Model: &xlibvirt.DomainCPUModel{
+				Value: h.CPU.Model,
+			},
+		},
+		VCPU: &xlibvirt.DomainVCPU{
+			Value: h.CPU.Sockets * h.CPU.Cores * h.CPU.Threads,
+		},
+		Memory: &xlibvirt.DomainMemory{
+			Value: uint(h.Memory.Capacity.Value),
+			Unit:  h.Memory.Capacity.Unit,
+		},
+		Devices: &xlibvirt.DomainDeviceList{
+			Emulator: "/usr/bin/qemu-system-arm",
+			Serials: []xlibvirt.DomainSerial{
+				xlibvirt.DomainSerial{
+					Source: &xlibvirt.DomainChardevSource{
+						TCP: &xlibvirt.DomainChardevSourceTCP{
+							Mode:    "bind",
+							Host:    "localhost",
+							Service: fmt.Sprintf("%d", nextPort(4000, 7000)),
+						},
+					},
+					Protocol: &xlibvirt.DomainChardevProtocol{
+						Type: "telnet",
+					},
+				},
+			},
+			/*
+				Disks: []xlibvirt.DomainDisk{
+					xlibvirt.DomainDisk{
+						Device: "disk",
+						Driver: &xlibvirt.DomainDiskDriver{Name: "qemu", Type: "qcow2"},
+						Source: &xlibvirt.DomainDiskSource{
+							File: &xlibvirt.DomainDiskSourceFile{
+								File: instanceImage,
+							},
+						},
+						Target: &xlibvirt.DomainDiskTarget{Dev: "sda", Bus: "sd"},
+					},
+				},
+			*/
+		},
+		//XXX hack because for whaever reason
+		//    `-sd <img>` != `-drive if=sd,file=<img>`
+		QEMUCommandline: &xlibvirt.DomainQEMUCommandline{
+			Args: []xlibvirt.DomainQEMUCommandlineArg{
+				xlibvirt.DomainQEMUCommandlineArg{
+					Value: "-sd",
+				},
+				xlibvirt.DomainQEMUCommandlineArg{
+					Value: instanceImage,
+				},
+			},
+		},
+	}
+
+	return d
+
+}
+
+func nextPort(min, max int) int {
+
+	ports := portsInUse(min, max)
+	ports = append(ports, min-1)
+
+	port := nextInt(ports)
+
+	if port > max {
+		log.Printf(
+			"warning: first available port is beyond specified max %d", port)
+	}
+
+	return port
+}
+
+func portsInUse(from, to int) []int {
+
+	cmd := exec.Command(
+		"ss", "-lnt", fmt.Sprintf("( sport >= %d and sport < %d )", from, to))
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println(string(out))
+		log.Fatal(err)
+	}
+
+	var result []int
+	lines := strings.Split(string(out), "\n")
+	lines = lines[1 : len(lines)-1]
+	for _, line := range lines {
+		fields := strings.Fields(line)
+		local := fields[3]
+		parts := strings.Split(local, ":")
+		port, _ := strconv.Atoi(parts[len(parts)-1])
+		result = append(result, port)
+	}
+
+	return result
+
+}
+
+func nextInt(ports []int) int {
+
+	sort.Ints(ports)
+	for i := 0; i < len(ports)-1; i++ {
+		if ports[i+1] > ports[i]+1 {
+			return ports[i] + 1
+		}
+	}
+
+	return ports[len(ports)-1] + 1
+
 }
 
 func domConnect(

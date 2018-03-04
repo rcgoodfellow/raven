@@ -1,3 +1,5 @@
+package rvn
+
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
  * This file implements the nfs functionality of rvn. When rvn creates a
@@ -6,7 +8,6 @@
  * export setup is done here.
  *
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-package rvn
 
 import (
 	"fmt"
