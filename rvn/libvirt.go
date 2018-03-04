@@ -730,30 +730,16 @@ func arm7Dom(h *Host, t *Topo) *xlibvirt.Domain {
 					},
 				},
 			},
-			/*
-				Disks: []xlibvirt.DomainDisk{
-					xlibvirt.DomainDisk{
-						Device: "disk",
-						Driver: &xlibvirt.DomainDiskDriver{Name: "qemu", Type: "qcow2"},
-						Source: &xlibvirt.DomainDiskSource{
-							File: &xlibvirt.DomainDiskSourceFile{
-								File: instanceImage,
-							},
+			Disks: []xlibvirt.DomainDisk{
+				xlibvirt.DomainDisk{
+					Device: "disk",
+					Driver: &xlibvirt.DomainDiskDriver{Name: "qemu", Type: "qcow2"},
+					Source: &xlibvirt.DomainDiskSource{
+						File: &xlibvirt.DomainDiskSourceFile{
+							File: instanceImage,
 						},
-						Target: &xlibvirt.DomainDiskTarget{Dev: "sda", Bus: "sd"},
 					},
-				},
-			*/
-		},
-		//XXX hack because for whaever reason
-		//    `-sd <img>` != `-drive if=sd,file=<img>`
-		QEMUCommandline: &xlibvirt.DomainQEMUCommandline{
-			Args: []xlibvirt.DomainQEMUCommandlineArg{
-				xlibvirt.DomainQEMUCommandlineArg{
-					Value: "-sd",
-				},
-				xlibvirt.DomainQEMUCommandlineArg{
-					Value: instanceImage,
+					Target: &xlibvirt.DomainDiskTarget{Dev: "sda", Bus: "sd"},
 				},
 			},
 		},
