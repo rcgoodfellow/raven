@@ -94,6 +94,15 @@
         - freebsd-11.qcow2
         - freebsd-11r.qcow2
         - freebsd-11d.qcow2
+        - raspbian:a9.qcow2
+
+    - name: fetch kernels
+      get_url:
+        url: http://mirror.deterlab.net/rvn/kernel/{{item}}
+        dest: /var/rvn/kernel/{{item}}
+      with_items:
+        - u-boot:a9
+        - zImage:a9
 
     - name: create netboot base image
       command: qemu-img create /var/rvn/img/netboot.qcow2 25G
