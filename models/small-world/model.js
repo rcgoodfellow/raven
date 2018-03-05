@@ -23,6 +23,7 @@ droid = {
   'cpu': { 'cores': 2 },
   'memory': { 'capacity': GB(2) }
 };
+*/
 
 server = {
   'name': 'server',
@@ -39,19 +40,15 @@ sw = {
   'image': 'cumulusvx-3.5',
   'os': 'linux'
 };
-*/
 
 topo = {
   'name': 'small-world',
-  'nodes': [thing/*, droid, server*/],
-  'switches': [/*sw*/],
-  'links': [/*
+  'nodes': [thing/*droid*/, server],
+  'switches': [sw],
+  'links': [
     Link('thing', 1, 'sw', 1),
-    Link('droid', 1, 'sw', 2),
+    /*Link('droid', 1, 'sw', 2),*/
     Link('server', 1, 'sw', 3)
-  */],
-  'options': {
-    'display': 'local'
-  }
+  ],
 }
 

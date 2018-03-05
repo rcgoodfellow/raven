@@ -602,12 +602,15 @@ func x86Dom(h *Host, t *Topo) *xlibvirt.Domain {
 				},
 			},
 			Graphics: []xlibvirt.DomainGraphic{
-				xlibvirt.DomainGraphic{
-					VNC: &xlibvirt.DomainGraphicVNC{
-						Port:     -1,
-						AutoPort: "yes",
+				createGraphics(t),
+				/*
+					xlibvirt.DomainGraphic{
+						VNC: &xlibvirt.DomainGraphicVNC{
+							Port:     -1,
+							AutoPort: "yes",
+						},
 					},
-				},
+				*/
 			},
 			Disks: []xlibvirt.DomainDisk{
 				xlibvirt.DomainDisk{
