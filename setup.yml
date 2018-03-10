@@ -76,6 +76,7 @@
       with_items:
         - {path: /var/rvn/img, state: directory}
         - {path: /var/rvn/kernel, state: directory}
+        - {path: /var/rvn/initrd, state: directory}
         - {path: /var/rvn/template, state: directory}
         - {path: /var/rvn/run, state: touch}
         - {path: /var/rvn/ssh, state: directory}
@@ -95,14 +96,12 @@
         - freebsd-11r.qcow2
         - freebsd-11d.qcow2
         - raspbian:a9.qcow2
+        - ubuntu-1604.qcow2
 
     - name: fetch kernels
       get_url:
         url: http://mirror.deterlab.net/rvn/kernel/{{item}}
         dest: /var/rvn/kernel/{{item}}
-      with_items:
-        - u-boot:a9
-        - zImage:a9
 
     - name: create netboot base image
       command: qemu-img create /var/rvn/img/netboot.qcow2 25G
