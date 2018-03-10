@@ -96,6 +96,7 @@
         - freebsd-11r.qcow2
         - freebsd-11d.qcow2
         - raspbian:a9.qcow2
+        - ubuntu-1604.qcow2
 
     - name: fetch kernels
       get_url:
