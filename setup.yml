@@ -76,6 +76,7 @@
       with_items:
         - {path: /var/rvn/img, state: directory}
         - {path: /var/rvn/kernel, state: directory}
+        - {path: /var/rvn/initrd, state: directory}
         - {path: /var/rvn/template, state: directory}
         - {path: /var/rvn/run, state: touch}
         - {path: /var/rvn/ssh, state: directory}
