@@ -38,17 +38,20 @@ type Port struct {
 }
 
 type Host struct {
-	Name      string  `json:"name"`
-	Arch      string  `json:"arch"`
-	Platform  string  `json:"platform"`
-	Machine   string  `json:"machine"`
-	Kernel    string  `json:"kernel"`
-	Image     string  `json:"image"`
-	OS        string  `json:"os"`
-	NoTestNet bool    `json:"no-testnet"`
-	Mounts    []Mount `json:"mounts"`
-	CPU       *CPU    `json:"cpu,omitempty"`
-	Memory    *Memory `json:"memory,omitempty"`
+	Name       string  `json:"name"`
+	Arch       string  `json:"arch"`
+	Platform   string  `json:"platform"`
+	Machine    string  `json:"machine"`
+	Kernel     string  `json:"kernel"`
+	Cmdline    string  `json:"cmdline"`
+	Initrd     string  `json:"initrd"`
+	Image      string  `json:"image"`
+	OS         string  `json:"os"`
+	NoTestNet  bool    `json:"no-testnet"`
+	Mounts     []Mount `json:"mounts"`
+	CPU        *CPU    `json:"cpu,omitempty"`
+	Memory     *Memory `json:"memory,omitempty"`
+	DefaultNic string  `json:"defaultnic"`
 
 	// internal use only
 	ports []Port `json:"-"`
@@ -112,6 +115,9 @@ type Platform struct {
 	Memory  *Memory
 	Kernel  string
 	Image   string
+	Cmdline string
+	Initrd  string
+	Nic     string
 }
 
 var defaults = struct {
@@ -125,7 +131,8 @@ var defaults = struct {
 		Machine: "pc-i440fx-2.10",
 		CPU:     &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "kvm64"},
 		Memory:  &Memory{Capacity: UnitValue{Value: 4, Unit: "GB"}},
-		Image:   "fedora-27",
+		Image:   "netboot",
+		Nic:     "virtio",
 	},
 	Arm: &Platform{
 		Name:    "arm7",
@@ -135,6 +142,7 @@ var defaults = struct {
 		Memory:  &Memory{Capacity: UnitValue{Value: 1, Unit: "GB"}},
 		Kernel:  "u-boot:a9",
 		Image:   "raspbian:a9", //TODO s/raspbian/alpine/g
+		Nic:     "virtio",
 	},
 	Android: &Platform{
 		Name:    "android",
@@ -143,6 +151,7 @@ var defaults = struct {
 		CPU:     &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "kvm64"},
 		Memory:  &Memory{Capacity: UnitValue{Value: 2, Unit: "GB"}},
 		Image:   "oreo",
+		Nic:     "virtio",
 	},
 }
 
@@ -163,6 +172,9 @@ func fillInMissing(h *Host) {
 		if h.Image == "" {
 			h.Image = defaults.X86_64.Image
 		}
+		if h.DefaultNic == "" {
+			h.DefaultNic = defaults.X86_64.Nic
+		}
 
 	case "arm7":
 		h.Arch = defaults.Arm.Arch
@@ -177,6 +189,9 @@ func fillInMissing(h *Host) {
 		if h.Kernel == "" {
 			h.Kernel = defaults.Arm.Kernel
 		}
+		if h.DefaultNic == "" {
+			h.DefaultNic = defaults.Arm.Nic
+		}
 
 	case "android":
 		h.Arch = defaults.Android.Arch
@@ -187,6 +202,9 @@ func fillInMissing(h *Host) {
 		applyMemoryDefaults(&h.Memory, defaults.Android.Memory)
 		if h.Image == "" {
 			h.Image = defaults.Android.Image
+		}
+		if h.DefaultNic == "" {
+			h.DefaultNic = defaults.Android.Nic
 		}
 
 	}
@@ -225,7 +243,7 @@ func findKernel(h *Host) string {
 	var defaultKernel string
 	switch h.Arch {
 	case "armv7l":
-		defaultKernel = defaults.Arm.Kernel
+		defaultKernel = fmt.Sprintf("/var/rvn/kernel/%s", defaults.Arm.Kernel)
 	case "Android":
 		defaultKernel = ""
 	case "x86_64":
@@ -234,29 +252,61 @@ func findKernel(h *Host) string {
 		defaultKernel = ""
 	}
 
-	// first: try to find the referenced kernel in the local directory
+	if h.Kernel == "" {
+		return defaultKernel
+	}
+
+	return findResource("kernel", h.Kernel, defaultKernel)
+
+}
+
+func findInitrd(h *Host) string {
+
+	var defaultInitrd string
+	switch h.Arch {
+	case "armv7l":
+		defaultInitrd = ""
+	case "Android":
+		defaultInitrd = ""
+	case "x86_64":
+		defaultInitrd = ""
+	default:
+		defaultInitrd = ""
+	}
+
+	if h.Initrd == "" {
+		return defaultInitrd
+	}
+
+	return findResource("initrd", h.Initrd, defaultInitrd)
+
+}
+
+func findResource(kind, target, defaultValue string) string {
+
+	// first: try to find the referenced resource in the local directory
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Printf(
-			"findKernel: error getting working directory - using default kernel")
-		return fmt.Sprintf("/var/rvn/kernel/%s", defaultKernel)
+			"find-%s: error getting working directory - using default", kind)
+		return defaultValue
 	}
-	_, err = os.Stat(fmt.Sprintf("%s/%s", wd, h.Kernel))
+	_, err = os.Stat(fmt.Sprintf("%s/%s", wd, target))
 	if err == nil {
-		return fmt.Sprintf("/%s/%s", wd, h.Kernel)
+		return fmt.Sprintf("%s/%s", wd, target)
 	}
 
-	// second: if we cant find the referenced kernel locally, try to find the
+	// second: if we cant find the referenced resource locally, try to find the
 	// it in the rvn installation directory
-	_, err = os.Stat(fmt.Sprintf("/var/rvn/kernel/%s", h.Kernel))
+	_, err = os.Stat(fmt.Sprintf("/var/rvn/%s/%s", kind, target))
 	if err == nil {
-		return fmt.Sprintf("/var/rvn/kernel/%s", h.Kernel)
+		return fmt.Sprintf("/var/rvn/%s/%s", kind, target)
 	}
 
 	log.Printf(
-		"findKernel: kernel '%s' not found - using default kernel", h.Kernel)
-	return fmt.Sprintf("/var/rvn/kernel/%s", defaultKernel)
+		"find-%s: '%s' not found - using default", kind, target)
 
+	return defaultValue
 }
 
 // Methods ====================================================================

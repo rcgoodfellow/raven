@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/libvirt/libvirt-go"
 	xlibvirt "github.com/libvirt/libvirt-go-xml"
 )
@@ -560,7 +561,10 @@ func x86Dom(h *Host, t *Topo) *xlibvirt.Domain {
 			APIC: &xlibvirt.DomainFeatureAPIC{},
 		},
 		OS: &xlibvirt.DomainOS{
-			Type: &xlibvirt.DomainOSType{Type: "hvm"},
+			Type:    &xlibvirt.DomainOSType{Type: "hvm"},
+			Kernel:  findKernel(h),
+			Initrd:  findInitrd(h),
+			Cmdline: h.Cmdline,
 		},
 		CPU: &xlibvirt.DomainCPU{
 			/*
@@ -590,6 +594,18 @@ func x86Dom(h *Host, t *Topo) *xlibvirt.Domain {
 				xlibvirt.DomainSerial{
 					Source: &xlibvirt.DomainChardevSource{
 						Pty: &xlibvirt.DomainChardevSourcePty{},
+					},
+				},
+				xlibvirt.DomainSerial{
+					Source: &xlibvirt.DomainChardevSource{
+						TCP: &xlibvirt.DomainChardevSourceTCP{
+							Mode:    "bind",
+							Host:    "localhost",
+							Service: fmt.Sprintf("%d", nextPort(4000, 7000)),
+						},
+					},
+					Protocol: &xlibvirt.DomainChardevProtocol{
+						Type: "telnet",
 					},
 				},
 			},
@@ -822,6 +838,22 @@ func domConnect(
 			}
 		}
 	}
+
+	hostNicModel := h.DefaultNic
+	hostProps_, ok := props[h.Name]
+	if ok {
+		hostProps, ok := hostProps_.(map[string]interface{})
+		if ok {
+			hostNic_, ok := hostProps["nic"]
+			if ok {
+				hostNic, ok := hostNic_.(string)
+				if ok {
+					hostNicModel = hostNic
+				}
+			}
+		}
+	}
+
 	dom.Devices.Interfaces = append(dom.Devices.Interfaces,
 		xlibvirt.DomainInterface{
 			Source: &xlibvirt.DomainInterfaceSource{
@@ -829,7 +861,7 @@ func domConnect(
 					Network: net,
 				},
 			},
-			Model: &xlibvirt.DomainInterfaceModel{Type: "virtio"},
+			Model: &xlibvirt.DomainInterfaceModel{Type: hostNicModel},
 			Boot:  boot,
 		})
 }
@@ -840,6 +872,9 @@ func resolveLinks(t *Topo) {
 	for _, l := range t.Links {
 		for _, e := range l.Endpoints {
 			h := t.getHost(e.Name)
+			if h == nil {
+				log.Fatalf("could not find host '%s' - referenced by link", red(e.Name))
+			}
 			h.ports = append(h.ports, Port{l.Name, e.Port})
 		}
 	}
@@ -1152,3 +1187,5 @@ func cleanupRpcBind(net *libvirt.Network) {
 	}
 
 }
+
+var red = color.New(color.FgRed).SprintFunc()
