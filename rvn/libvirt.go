@@ -637,7 +637,10 @@ func x86Dom(h *Host, t *Topo) *xlibvirt.Domain {
 							File: instanceImage,
 						},
 					},
-					Target: &xlibvirt.DomainDiskTarget{Dev: "vda", Bus: "virtio"},
+					Target: &xlibvirt.DomainDiskTarget{
+						Dev: h.DefaultDisktype.Dev + "a",
+						Bus: h.DefaultDisktype.Bus,
+					},
 				},
 			},
 		},
@@ -758,7 +761,10 @@ func arm7Dom(h *Host, t *Topo) *xlibvirt.Domain {
 							File: instanceImage,
 						},
 					},
-					Target: &xlibvirt.DomainDiskTarget{Dev: "sda", Bus: "sd"},
+					Target: &xlibvirt.DomainDiskTarget{
+						Dev: h.DefaultDisktype.Dev + "a",
+						Bus: h.DefaultDisktype.Bus,
+					},
 				},
 			},
 		},

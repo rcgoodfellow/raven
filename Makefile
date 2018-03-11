@@ -9,3 +9,6 @@ build:
 
 clean:
 	rm -rf build
+
+install:
+	sudo cp build/rvn /usr/local/bin/rvn

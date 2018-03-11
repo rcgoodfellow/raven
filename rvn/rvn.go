@@ -37,21 +37,27 @@ type Port struct {
 	Index int
 }
 
+type Disktype struct {
+	Bus string `json:"bus"`
+	Dev string `json:"dev"`
+}
+
 type Host struct {
-	Name       string  `json:"name"`
-	Arch       string  `json:"arch"`
-	Platform   string  `json:"platform"`
-	Machine    string  `json:"machine"`
-	Kernel     string  `json:"kernel"`
-	Cmdline    string  `json:"cmdline"`
-	Initrd     string  `json:"initrd"`
-	Image      string  `json:"image"`
-	OS         string  `json:"os"`
-	NoTestNet  bool    `json:"no-testnet"`
-	Mounts     []Mount `json:"mounts"`
-	CPU        *CPU    `json:"cpu,omitempty"`
-	Memory     *Memory `json:"memory,omitempty"`
-	DefaultNic string  `json:"defaultnic"`
+	Name            string    `json:"name"`
+	Arch            string    `json:"arch"`
+	Platform        string    `json:"platform"`
+	Machine         string    `json:"machine"`
+	Kernel          string    `json:"kernel"`
+	Cmdline         string    `json:"cmdline"`
+	Initrd          string    `json:"initrd"`
+	Image           string    `json:"image"`
+	OS              string    `json:"os"`
+	NoTestNet       bool      `json:"no-testnet"`
+	Mounts          []Mount   `json:"mounts"`
+	CPU             *CPU      `json:"cpu,omitempty"`
+	Memory          *Memory   `json:"memory,omitempty"`
+	DefaultNic      string    `json:"defaultnic"`
+	DefaultDisktype *Disktype `json:"defaultdisktype"`
 
 	// internal use only
 	ports []Port `json:"-"`
@@ -108,16 +114,17 @@ type RebootRequest struct {
 // support this runnable by convention model
 
 type Platform struct {
-	Name    string
-	Arch    string
-	Machine string
-	CPU     *CPU
-	Memory  *Memory
-	Kernel  string
-	Image   string
-	Cmdline string
-	Initrd  string
-	Nic     string
+	Name     string
+	Arch     string
+	Machine  string
+	CPU      *CPU
+	Memory   *Memory
+	Kernel   string
+	Image    string
+	Cmdline  string
+	Initrd   string
+	Nic      string
+	Disktype *Disktype
 }
 
 var defaults = struct {
@@ -126,32 +133,35 @@ var defaults = struct {
 	Android *Platform
 }{
 	X86_64: &Platform{
-		Name:    "x86_64",
-		Arch:    "x86_64",
-		Machine: "pc-i440fx-2.10",
-		CPU:     &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "kvm64"},
-		Memory:  &Memory{Capacity: UnitValue{Value: 4, Unit: "GB"}},
-		Image:   "netboot",
-		Nic:     "virtio",
+		Name:     "x86_64",
+		Arch:     "x86_64",
+		Machine:  "pc-i440fx-2.10",
+		CPU:      &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "kvm64"},
+		Memory:   &Memory{Capacity: UnitValue{Value: 4, Unit: "GB"}},
+		Image:    "netboot",
+		Nic:      "virtio",
+		Disktype: &Disktype{Dev: "vd", Bus: "virtio"},
 	},
 	Arm: &Platform{
-		Name:    "arm7",
-		Arch:    "armv7l",
-		Machine: "vexpress-a9",
-		CPU:     &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "cortex-a9"},
-		Memory:  &Memory{Capacity: UnitValue{Value: 1, Unit: "GB"}},
-		Kernel:  "u-boot:a9",
-		Image:   "raspbian:a9", //TODO s/raspbian/alpine/g
-		Nic:     "virtio",
+		Name:     "arm7",
+		Arch:     "armv7l",
+		Machine:  "vexpress-a9",
+		CPU:      &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "cortex-a9"},
+		Memory:   &Memory{Capacity: UnitValue{Value: 1, Unit: "GB"}},
+		Kernel:   "u-boot:a9",
+		Image:    "raspbian:a9", //TODO s/raspbian/alpine/g
+		Nic:      "virtio",
+		Disktype: &Disktype{Dev: "sd", Bus: "sd"},
 	},
 	Android: &Platform{
-		Name:    "android",
-		Arch:    "x86_64",
-		Machine: "auto",
-		CPU:     &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "kvm64"},
-		Memory:  &Memory{Capacity: UnitValue{Value: 2, Unit: "GB"}},
-		Image:   "oreo",
-		Nic:     "virtio",
+		Name:     "android",
+		Arch:     "x86_64",
+		Machine:  "auto",
+		CPU:      &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "kvm64"},
+		Memory:   &Memory{Capacity: UnitValue{Value: 2, Unit: "GB"}},
+		Image:    "oreo",
+		Nic:      "virtio",
+		Disktype: &Disktype{Dev: "vd", Bus: "virtio"},
 	},
 }
 
@@ -169,6 +179,7 @@ func fillInMissing(h *Host) {
 		}
 		applyCPUDefaults(&h.CPU, defaults.X86_64.CPU)
 		applyMemoryDefaults(&h.Memory, defaults.X86_64.Memory)
+		applyDisktypeDefaults(&h.DefaultDisktype, defaults.X86_64.Disktype)
 		if h.Image == "" {
 			h.Image = defaults.X86_64.Image
 		}
@@ -183,6 +194,7 @@ func fillInMissing(h *Host) {
 		}
 		applyCPUDefaults(&h.CPU, defaults.Arm.CPU)
 		applyMemoryDefaults(&h.Memory, defaults.Arm.Memory)
+		applyDisktypeDefaults(&h.DefaultDisktype, defaults.Arm.Disktype)
 		if h.Image == "" {
 			h.Image = defaults.Arm.Image
 		}
@@ -200,6 +212,7 @@ func fillInMissing(h *Host) {
 		}
 		applyCPUDefaults(&h.CPU, defaults.Android.CPU)
 		applyMemoryDefaults(&h.Memory, defaults.Android.Memory)
+		applyDisktypeDefaults(&h.DefaultDisktype, defaults.Android.Disktype)
 		if h.Image == "" {
 			h.Image = defaults.Android.Image
 		}
@@ -235,6 +248,18 @@ func applyMemoryDefaults(to **Memory, from *Memory) {
 	}
 	if (*to).Capacity.Value == 0 || (*to).Capacity.Unit == "" {
 		(*to).Capacity = from.Capacity
+	}
+}
+
+func applyDisktypeDefaults(to **Disktype, from *Disktype) {
+	if *to == nil {
+		*to = new(Disktype)
+	}
+	if (*to).Dev == "" {
+		(*to).Dev = from.Dev
+	}
+	if (*to).Bus == "" {
+		(*to).Bus = from.Bus
 	}
 }
 
