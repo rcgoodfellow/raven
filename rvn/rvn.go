@@ -343,5 +343,65 @@ func ReadTopo(src []byte) (Topo, error) {
 		fillInMissing(&topo.Switches[i].Host)
 	}
 
+	CheckRvnImages(topo)
+
 	return topo, nil
+}
+
+func CheckRvnImages(topo Topo) {
+	images = make([]string)
+	// for each Node, get the image required
+	for i := 0; i < len(topo.Nodes); i++ {
+		currentImg = &topo.Nodes[i].Host.Image
+		// no way to check existance
+		var exists bool = false
+		for j := 0; j < len(images); j++ {
+			if currentImg == images[j] {
+				exists = true
+				break
+			}
+		}
+		// we did not find image, add it to our image list
+		if exists != true {
+			images = append(images, currentImg)
+		}
+	}
+	// for each unique image, check that it exists, if not, download it
+	for i := 0; i < len(images); i++ {
+		filePath := "/var/rvn/img/" + images[i]
+		_, err := os.Stat()
+		// if there is an err, file does not exist, download it
+		if err {
+			remotePath := "https://mirror.deterlab.net/mirrors/" + images[i]
+			dl_err = DownloadFile(filePath, remotePath)
+			if dl_err != nil {
+				panic(dl_err)
+			}
+		}
+	}
+}
+
+// https://golangcode.com/download-a-file-from-a-url/
+func DownloadFile(filepath string, url string) error {
+	// Create the file
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
