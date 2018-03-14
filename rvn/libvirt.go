@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"sort"
@@ -17,6 +16,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/libvirt/libvirt-go"
 	xlibvirt "github.com/libvirt/libvirt-go-xml"
+	log "github.com/sirupsen/logrus"
 )
 
 // Types ======================================================================

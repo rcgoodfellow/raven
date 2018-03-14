@@ -11,11 +11,12 @@ package rvn
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"text/template"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Export struct {

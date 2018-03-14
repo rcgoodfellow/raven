@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
+
+	xir "github.com/ceftb/xir/lang/go"
+	log "github.com/sirupsen/logrus"
 )
 
 // Types ======================================================================
@@ -545,4 +547,32 @@ func ReadTopo(src []byte) (Topo, error) {
 	}
 
 	return topo, nil
+}
+
+func Rvn2Xir(t *Topo) *xir.Net {
+
+	net := xir.NewNet()
+
+	for _, x := range t.Nodes {
+		net.Node().Set(xir.Props{"name": x.Name})
+	}
+	for _, x := range t.Switches {
+		net.Node().Set(xir.Props{"name": x.Name})
+	}
+	for _, x := range t.Links {
+		a := net.GetNodeByName(x.Endpoints[0].Name)
+		if a == nil {
+			log.Errorf("bad node name %s", x.Endpoints[0].Name)
+			continue
+		}
+		b := net.GetNodeByName(x.Endpoints[1].Name)
+		if b == nil {
+			log.Errorf("bad node name %s", x.Endpoints[1].Name)
+			continue
+		}
+		net.Link(a.Endpoint(), b.Endpoint())
+	}
+
+	return net
+
 }
