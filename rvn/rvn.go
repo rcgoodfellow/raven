@@ -393,13 +393,13 @@ func CheckRvnImages(topo Topo) {
 					_, err = os.Stat(images[i])
 					if err != nil {
 						log.Fatalln("Copy failed - make sure if relative paths accessable by root (~)")
-						panic(err)
+						log.Fatalln(err)
 					} else {
 						// no error, so image does exist, so lets copy from path to /var/rvn/img
 						log.Println("Attempting copy from: " + images[i] + " to: " + filePath)
 						err = CopyLocalFile(images[i], filePath)
 						if err != nil {
-							panic(err)
+							log.Fatalln(err)
 						}
 					}
 				}
@@ -415,7 +415,7 @@ func CheckRvnImages(topo Topo) {
 					var dl_err error = DownloadFile(filePath, remotePath)
 					// we tried to find the image on deterlab mirror, but could not, error
 					if dl_err != nil {
-						panic(dl_err)
+						log.Fatalln(dl_err)
 					}
 				}
 			}
@@ -429,13 +429,13 @@ func CheckRvnImages(topo Topo) {
 				// first we create all the subdirectorys in the file path
 				cr_err := os.MkdirAll(filePath, 0755)
 				if cr_err != nil {
-					panic(cr_err)
+					log.Fatalln(cr_err)
 				}
 				// now try to download the image to the correct lcoation
 				log.Println("Attempting copy from: " + parsedURL.String() + " to: " + filePath + imageName)
 				dl_err := DownloadURL(parsedURL, filePath, imageName)
 				if dl_err != nil {
-					panic(dl_err)
+					log.Fatalln(dl_err)
 				}
 			}
 		}
