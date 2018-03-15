@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"io"
+	"net/http"
 	"os/exec"
 )
 
@@ -290,7 +292,6 @@ func LoadTopo() (Topo, error) {
 		log.Printf("loadtopo: could not determine working directory")
 		return Topo{}, err
 	}
-
 	path := wd + "/topo.json"
 	return LoadTopoFile(path)
 }
@@ -349,10 +350,10 @@ func ReadTopo(src []byte) (Topo, error) {
 }
 
 func CheckRvnImages(topo Topo) {
-	images = make([]string)
+	var images []string = make([]string, 0)
 	// for each Node, get the image required
 	for i := 0; i < len(topo.Nodes); i++ {
-		currentImg = &topo.Nodes[i].Host.Image
+		var currentImg string = topo.Nodes[i].Host.Image
 		// no way to check existance
 		var exists bool = false
 		for j := 0; j < len(images); j++ {
@@ -368,12 +369,12 @@ func CheckRvnImages(topo Topo) {
 	}
 	// for each unique image, check that it exists, if not, download it
 	for i := 0; i < len(images); i++ {
-		filePath := "/var/rvn/img/" + images[i]
-		_, err := os.Stat()
+		filePath := "/var/rvn/img/" + images[i] + ".qcow2"
+		_, err := os.Stat(filePath)
 		// if there is an err, file does not exist, download it
-		if err {
-			remotePath := "https://mirror.deterlab.net/mirrors/" + images[i]
-			dl_err = DownloadFile(filePath, remotePath)
+		if err != nil {
+			remotePath := "https://mirror.deterlab.net/rvn/img/" + images[i] + ".qcow2"
+			var dl_err error = DownloadFile(filePath, remotePath)
 			if dl_err != nil {
 				panic(dl_err)
 			}

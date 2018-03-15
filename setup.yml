@@ -185,19 +185,19 @@
         name: "{{redis_package}}"
         state: restarted
     
-    - name: fetch rvn binary
-      get_url:
-        url: https://github.com/rcgoodfellow/raven/releases/download/v0.1/rvn-libvirt4
-        dest: /usr/local/bin/rvn
-        mode: "a+x"
-      when: ansible_distribution != "Debian" and ansible_distribution != "Ubuntu"
+    #- name: fetch rvn binary
+    #  get_url:
+    #    url: https://github.com/rcgoodfellow/raven/releases/download/v0.1/rvn-libvirt4
+    #    dest: /usr/local/bin/rvn
+    #    mode: "a+x"
+    #  when: ansible_distribution != "Debian" and ansible_distribution != "Ubuntu"
 
-    - name: fetch rvn binary
-      get_url:
-        url: https://github.com/rcgoodfellow/raven/releases/download/v0.1/rvn-libvirt1
-        dest: /usr/local/bin/rvn
-        mode: "a+x"
-      when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+    #- name: fetch rvn binary
+    #  get_url:
+    #    url: https://github.com/rcgoodfellow/raven/releases/download/v0.1/rvn-libvirt1
+    #    dest: /usr/local/bin/rvn
+    #    mode: "a+x"
+    #  when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
     
     - name: install rvn-cli in /usr/bin
       file:

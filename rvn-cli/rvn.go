@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/rcgoodfellow/raven/rvn"
+	"github.com/isi-lincoln/raven/rvn"
 	"github.com/sparrc/go-ping"
 	"log"
 	"os"
