@@ -61,6 +61,8 @@ type Host struct {
 	DefaultNic      string    `json:"defaultnic"`
 	DefaultDisktype *Disktype `json:"defaultdisktype"`
 
+	TelnetPort int
+
 	// internal use only
 	ports []Port `json:"-"`
 }
@@ -101,6 +103,7 @@ type Topo struct {
 type Runtime struct {
 	SubnetTable        [256]bool
 	SubnetReverseTable map[string]int
+	TelnetPorts        []int
 }
 
 type RebootRequest struct {
@@ -441,6 +444,39 @@ func (r *Runtime) FreeSubnet(tag string) {
 	}
 }
 
+func (r *Runtime) NewTelnetPort() int {
+
+	port := nextIntFrom(r.TelnetPorts, 4000)
+	r.TelnetPorts = append(r.TelnetPorts, port)
+	r.Save()
+
+	return port
+
+}
+
+func (r *Runtime) FreeTelnetPort(port int) {
+
+	idx := -1
+	for i, x := range r.TelnetPorts {
+		if x == port {
+			idx = i
+			break
+		}
+	}
+
+	if idx != -1 {
+		r.TelnetPorts = remove(r.TelnetPorts, idx)
+	} else {
+		log.Warnf("request to remove unknown telnet port %d", port)
+	}
+
+}
+
+func remove(s []int, i int) []int {
+	s[len(s)-1], s[i] = s[i], s[len(s)-1]
+	return s[:len(s)-1]
+}
+
 // Functions ==================================================================
 
 func RunModel() error {
@@ -470,6 +506,14 @@ func RunModel() error {
 		return err
 	}
 	topo.Dir = wd
+
+	// add compute the telnet ports for each node and switch
+	for i, _ := range topo.Nodes {
+		topo.Nodes[i].TelnetPort = LoadRuntime().NewTelnetPort()
+	}
+	for i, _ := range topo.Switches {
+		topo.Switches[i].Host.TelnetPort = LoadRuntime().NewTelnetPort()
+	}
 
 	buf, err := json.MarshalIndent(topo, "", "  ")
 	if err != nil {

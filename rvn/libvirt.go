@@ -212,10 +212,16 @@ func Destroy() {
 
 	for _, x := range topo.Nodes {
 		destroyDomain(topo.QualifyName(x.Name), conn)
+		if x.Host.TelnetPort != 0 {
+			LoadRuntime().FreeTelnetPort(x.Host.TelnetPort)
+		}
 		state_key := fmt.Sprintf("config_state:%s:%s", topo.Name, x.Name)
 		db.Del(state_key)
 	}
 	for _, x := range topo.Switches {
+		if x.Host.TelnetPort != 0 {
+			LoadRuntime().FreeTelnetPort(x.Host.TelnetPort)
+		}
 		destroyDomain(topo.QualifyName(x.Name), conn)
 		state_key := fmt.Sprintf("config_state:%s:%s", topo.Name, x.Name)
 		db.Del(state_key)
@@ -601,7 +607,7 @@ func x86Dom(h *Host, t *Topo) *xlibvirt.Domain {
 						TCP: &xlibvirt.DomainChardevSourceTCP{
 							Mode:    "bind",
 							Host:    "localhost",
-							Service: fmt.Sprintf("%d", nextPort(4000, 7000)),
+							Service: fmt.Sprintf("%d", h.TelnetPort),
 						},
 					},
 					Protocol: &xlibvirt.DomainChardevProtocol{
@@ -744,7 +750,7 @@ func arm7Dom(h *Host, t *Topo) *xlibvirt.Domain {
 						TCP: &xlibvirt.DomainChardevSourceTCP{
 							Mode:    "bind",
 							Host:    "localhost",
-							Service: fmt.Sprintf("%d", nextPort(4000, 7000)),
+							Service: fmt.Sprintf("%d", h.TelnetPort),
 						},
 					},
 					Protocol: &xlibvirt.DomainChardevProtocol{
@@ -815,6 +821,23 @@ func portsInUse(from, to int) []int {
 }
 
 func nextInt(ports []int) int {
+
+	sort.Ints(ports)
+	for i := 0; i < len(ports)-1; i++ {
+		if ports[i+1] > ports[i]+1 {
+			return ports[i] + 1
+		}
+	}
+
+	return ports[len(ports)-1] + 1
+
+}
+
+func nextIntFrom(ports []int, start int) int {
+
+	if len(ports) == 0 {
+		return start
+	}
 
 	sort.Ints(ports)
 	for i := 0; i < len(ports)-1; i++ {
