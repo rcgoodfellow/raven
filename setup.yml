@@ -75,6 +75,7 @@
       file: path={{item.path}} state={{item.state}}
       with_items:
         - {path: /var/rvn/img, state: directory}
+        - {path: /var/rvn/img/user, state: directory}
         - {path: /var/rvn/kernel, state: directory}
         - {path: /var/rvn/initrd, state: directory}
         - {path: /var/rvn/template, state: directory}
