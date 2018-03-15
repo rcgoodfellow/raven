@@ -470,6 +470,8 @@ func (r *Runtime) FreeTelnetPort(port int) {
 		log.Warnf("request to remove unknown telnet port %d", port)
 	}
 
+	r.Save()
+
 }
 
 func remove(s []int, i int) []int {
