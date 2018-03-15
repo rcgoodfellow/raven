@@ -397,7 +397,7 @@ func doWipe(args []string) {
 	for _, x := range args {
 		err = rvn.WipeNode(topo, x)
 		if err != nil {
-			log.Println("%v", err)
+			log.Printf("%v", err)
 		}
 	}
 
