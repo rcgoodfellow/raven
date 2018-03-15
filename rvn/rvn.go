@@ -3,11 +3,12 @@ package rvn
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
-	"os"
-	"io"
 	"net/http"
+	"net/url"
+	"os"
 	"os/exec"
 )
 
@@ -369,15 +370,31 @@ func CheckRvnImages(topo Topo) {
 	}
 	// for each unique image, check that it exists, if not, download it
 	for i := 0; i < len(images); i++ {
-		filePath := "/var/rvn/img/" + images[i] + ".qcow2"
-		_, err := os.Stat(filePath)
-		// if there is an err, file does not exist, download it
+		// parse the uri (with golang url parser)
+		_, err := url.Parse(images[i])
+		// if err, we should check deterlab first
 		if err != nil {
-			remotePath := "https://mirror.deterlab.net/rvn/img/" + images[i] + ".qcow2"
-			var dl_err error = DownloadFile(filePath, remotePath)
-			if dl_err != nil {
-				panic(dl_err)
+			filePath := "/var/rvn/img/" + images[i] + ".qcow2"
+			_, err := os.Stat(filePath)
+			// if there is an err, file does not exist, download it
+			if err != nil {
+				remotePath := "https://mirror.deterlab.net/rvn/img/" + images[i] + ".qcow2"
+				var dl_err error = DownloadFile(filePath, remotePath)
+				if dl_err != nil {
+					panic(dl_err)
+				}
 			}
+			// if url parses, we should use it instead!
+		} else {
+			filePath := "/var/rvn/img/user/" + images[i]
+			_, err := os.Stat(filePath)
+			if err != nil {
+				var dl_err error = DownloadFile(filePath, images[i])
+				if dl_err != nil {
+					panic(dl_err)
+				}
+			}
+
 		}
 	}
 }
