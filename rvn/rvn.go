@@ -96,7 +96,7 @@ var defaults = struct {
 }{
 	Memory: &Memory{
 		Capacity: UnitValue{
-			Value: 4,
+			Value: 1,
 			Unit:  "GB",
 		},
 	},
