@@ -142,7 +142,7 @@ var defaults = struct {
 		Arch:     "x86_64",
 		Machine:  "pc-i440fx-2.10",
 		CPU:      &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "kvm64"},
-		Memory:   &Memory{Capacity: UnitValue{Value: 4, Unit: "GB"}},
+		Memory:   &Memory{Capacity: UnitValue{Value: 1, Unit: "GB"}},
 		Image:    "netboot",
 		Nic:      "virtio",
 		Disktype: &Disktype{Dev: "vd", Bus: "virtio"},
