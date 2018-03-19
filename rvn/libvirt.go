@@ -533,8 +533,8 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 		return nil
 	}
 
-	baseImage := "/var/rvn/img/" + h.Image + ".qcow2"
-	instanceImage := wd + "/" + h.Name + ".qcow2"
+	baseImage := "/var/rvn/img/" + h.Image
+	instanceImage := wd + "/" + h.Name
 	exec.Command("rm", "-f", instanceImage).Run()
 
 	out, err := exec.Command(
