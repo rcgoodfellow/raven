@@ -36,7 +36,7 @@
 
   tasks:
     - name: create virtual path
-      shell: sleep 4 && /opt/switch-drivers/snmp/apps/snmp nimbus vlan 2001 set access 3 4 
+      shell: sleep 4 && /usr/local/bin/snmpd nimbus vlan 2001 set access 3 4 
       async: 3600
       poll: 0
       tags:
@@ -49,4 +49,4 @@
       tags:
         - vpath-destroy
       with_items:
-        - sleep 7 && /opt/switch-drivers/snmp/apps/snmp nimbus vlan 2001 clear-all
+        - sleep 7 && /usr/local/bin/snmpd nimbus vlan 2001 clear-all
