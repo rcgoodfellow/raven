@@ -500,8 +500,7 @@ func CheckRvnImages(topo rvn.Topo) {
 				_, err := os.Stat(filePath)
 				// if there is an err, file does not exist, download it
 				if err != nil {
-					// FIXME: shhh dont tell ryan about the extentions, need to rehost rvn qcows
-					remotePath := "https://mirror.deterlab.net/rvn/img/" + images[i] + ".qcow2"
+					remotePath := "https://mirror.deterlab.net/rvn/img/" + images[i]
 					log.Println("Attempting copy from: " + remotePath + " to: " + filePath)
 					var dl_err error = DownloadFile(filePath, remotePath)
 					// we tried to find the image on deterlab mirror, but could not, error
