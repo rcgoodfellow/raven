@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
+
+	xir "github.com/ceftb/xir/lang/go"
+	log "github.com/sirupsen/logrus"
 )
 
 // Types ======================================================================
@@ -37,14 +39,29 @@ type Port struct {
 	Index int
 }
 
+type Disktype struct {
+	Bus string `json:"bus"`
+	Dev string `json:"dev"`
+}
+
 type Host struct {
-	Name      string  `json:"name"`
-	Image     string  `json:"image"`
-	OS        string  `json:"os"`
-	NoTestNet bool    `json:"no-testnet"`
-	Mounts    []Mount `json:"mounts"`
-	CPU       *CPU    `json:"cpu,omitempty"`
-	Memory    *Memory `json:"memory,omitempty"`
+	Name            string    `json:"name"`
+	Arch            string    `json:"arch"`
+	Platform        string    `json:"platform"`
+	Machine         string    `json:"machine"`
+	Kernel          string    `json:"kernel"`
+	Cmdline         string    `json:"cmdline"`
+	Initrd          string    `json:"initrd"`
+	Image           string    `json:"image"`
+	OS              string    `json:"os"`
+	NoTestNet       bool      `json:"no-testnet"`
+	Mounts          []Mount   `json:"mounts"`
+	CPU             *CPU      `json:"cpu,omitempty"`
+	Memory          *Memory   `json:"memory,omitempty"`
+	DefaultNic      string    `json:"defaultnic"`
+	DefaultDisktype *Disktype `json:"defaultdisktype"`
+
+	TelnetPort int
 
 	// internal use only
 	ports []Port `json:"-"`
@@ -69,6 +86,10 @@ type Link struct {
 	Props     map[string]interface{} `json:"props"`
 }
 
+type Options struct {
+	Display string `json:"display"`
+}
+
 type Topo struct {
 	Name     string   `json:"name"`
 	Nodes    []Node   `json:"nodes"`
@@ -76,11 +97,13 @@ type Topo struct {
 	Links    []Link   `json:"links"`
 	Dir      string   `json:"dir"`
 	MgmtIp   string   `json:"mgmtip"`
+	Options  Options  `json:"options"`
 }
 
 type Runtime struct {
 	SubnetTable        [256]bool
 	SubnetReverseTable map[string]int
+	TelnetPorts        []int
 }
 
 type RebootRequest struct {
@@ -89,48 +112,231 @@ type RebootRequest struct {
 }
 
 // Default Values =============================================================
+//
+// The default values are organized by platform. Each platform provides a basic
+// set of default configuration variables sufficent to start a vm under that
+// platform with no user specified configuration. Every new platform must
+// support this runnable by convention model
+
+type Platform struct {
+	Name     string
+	Arch     string
+	Machine  string
+	CPU      *CPU
+	Memory   *Memory
+	Kernel   string
+	Image    string
+	Cmdline  string
+	Initrd   string
+	Nic      string
+	Disktype *Disktype
+}
 
 var defaults = struct {
-	Memory *Memory
-	CPU    *CPU
+	X86_64  *Platform
+	Arm     *Platform
+	Android *Platform
 }{
-	Memory: &Memory{
-		Capacity: UnitValue{
-			Value: 1,
-			Unit:  "GB",
-		},
+	X86_64: &Platform{
+		Name:     "x86_64",
+		Arch:     "x86_64",
+		Machine:  "pc-i440fx-2.10",
+		CPU:      &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "kvm64"},
+		Memory:   &Memory{Capacity: UnitValue{Value: 1, Unit: "GB"}},
+		Image:    "netboot",
+		Nic:      "virtio",
+		Disktype: &Disktype{Dev: "vd", Bus: "virtio"},
 	},
-	CPU: &CPU{
-		Sockets: 1,
-		Cores:   1,
-		Threads: 1,
-		Model:   "kvm64",
+	Arm: &Platform{
+		Name:     "arm7",
+		Arch:     "armv7l",
+		Machine:  "vexpress-a9",
+		CPU:      &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "cortex-a9"},
+		Memory:   &Memory{Capacity: UnitValue{Value: 1, Unit: "GB"}},
+		Kernel:   "u-boot:a9",
+		Image:    "raspbian:a9", //TODO s/raspbian/alpine/g
+		Nic:      "virtio",
+		Disktype: &Disktype{Dev: "sd", Bus: "sd"},
+	},
+	Android: &Platform{
+		Name:     "android",
+		Arch:     "x86_64",
+		Machine:  "auto",
+		CPU:      &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "kvm64"},
+		Memory:   &Memory{Capacity: UnitValue{Value: 2, Unit: "GB"}},
+		Image:    "oreo",
+		Nic:      "virtio",
+		Disktype: &Disktype{Dev: "vd", Bus: "virtio"},
 	},
 }
 
 func fillInMissing(h *Host) {
-	if h.Memory == nil {
-		h.Memory = defaults.Memory
-	}
-	if h.CPU == nil {
-		h.CPU = defaults.CPU
-	} else {
-		//if these values are omitted by the user they are zero, but that is not
-		//an appropriate default value e.g., there is no computer with 0 sockets
-		if h.CPU.Sockets == 0 {
-			h.CPU.Sockets = 1
-		}
-		if h.CPU.Cores == 0 {
-			h.CPU.Cores = 1
-		}
-		if h.CPU.Threads == 0 {
-			h.CPU.Threads = 1
-		}
-		if h.CPU.Model == "" {
-			h.CPU.Model = "kvm64"
-		}
+	if h.Platform == "" {
+		h.Platform = "x86_64"
 	}
 
+	switch h.Platform {
+
+	case "x86_64":
+		h.Arch = defaults.X86_64.Arch
+		if h.Machine == "" {
+			h.Machine = defaults.X86_64.Machine
+		}
+		applyCPUDefaults(&h.CPU, defaults.X86_64.CPU)
+		applyMemoryDefaults(&h.Memory, defaults.X86_64.Memory)
+		applyDisktypeDefaults(&h.DefaultDisktype, defaults.X86_64.Disktype)
+		if h.Image == "" {
+			h.Image = defaults.X86_64.Image
+		}
+		if h.DefaultNic == "" {
+			h.DefaultNic = defaults.X86_64.Nic
+		}
+
+	case "arm7":
+		h.Arch = defaults.Arm.Arch
+		if h.Machine == "" {
+			h.Machine = defaults.Arm.Machine
+		}
+		applyCPUDefaults(&h.CPU, defaults.Arm.CPU)
+		applyMemoryDefaults(&h.Memory, defaults.Arm.Memory)
+		applyDisktypeDefaults(&h.DefaultDisktype, defaults.Arm.Disktype)
+		if h.Image == "" {
+			h.Image = defaults.Arm.Image
+		}
+		if h.Kernel == "" {
+			h.Kernel = defaults.Arm.Kernel
+		}
+		if h.DefaultNic == "" {
+			h.DefaultNic = defaults.Arm.Nic
+		}
+
+	case "android":
+		h.Arch = defaults.Android.Arch
+		if h.Machine == "" {
+			h.Machine = defaults.Android.Machine
+		}
+		applyCPUDefaults(&h.CPU, defaults.Android.CPU)
+		applyMemoryDefaults(&h.Memory, defaults.Android.Memory)
+		applyDisktypeDefaults(&h.DefaultDisktype, defaults.Android.Disktype)
+		if h.Image == "" {
+			h.Image = defaults.Android.Image
+		}
+		if h.DefaultNic == "" {
+			h.DefaultNic = defaults.Android.Nic
+		}
+
+	}
+
+}
+
+func applyCPUDefaults(to **CPU, from *CPU) {
+	if *to == nil {
+		*to = new(CPU)
+	}
+	if (*to).Model == "" {
+		(*to).Model = from.Model
+	}
+	if (*to).Sockets == 0 {
+		(*to).Sockets = from.Sockets
+	}
+	if (*to).Cores == 0 {
+		(*to).Cores = from.Cores
+	}
+	if (*to).Threads == 0 {
+		(*to).Threads = from.Threads
+	}
+}
+
+func applyMemoryDefaults(to **Memory, from *Memory) {
+	if *to == nil {
+		*to = new(Memory)
+	}
+	if (*to).Capacity.Value == 0 || (*to).Capacity.Unit == "" {
+		(*to).Capacity = from.Capacity
+	}
+}
+
+func applyDisktypeDefaults(to **Disktype, from *Disktype) {
+	if *to == nil {
+		*to = new(Disktype)
+	}
+	if (*to).Dev == "" {
+		(*to).Dev = from.Dev
+	}
+	if (*to).Bus == "" {
+		(*to).Bus = from.Bus
+	}
+}
+
+func findKernel(h *Host) string {
+
+	var defaultKernel string
+	switch h.Arch {
+	case "armv7l":
+		defaultKernel = fmt.Sprintf("/var/rvn/kernel/%s", defaults.Arm.Kernel)
+	case "Android":
+		defaultKernel = ""
+	case "x86_64":
+		defaultKernel = ""
+	default:
+		defaultKernel = ""
+	}
+
+	if h.Kernel == "" {
+		return defaultKernel
+	}
+
+	return findResource("kernel", h.Kernel, defaultKernel)
+
+}
+
+func findInitrd(h *Host) string {
+
+	var defaultInitrd string
+	switch h.Arch {
+	case "armv7l":
+		defaultInitrd = ""
+	case "Android":
+		defaultInitrd = ""
+	case "x86_64":
+		defaultInitrd = ""
+	default:
+		defaultInitrd = ""
+	}
+
+	if h.Initrd == "" {
+		return defaultInitrd
+	}
+
+	return findResource("initrd", h.Initrd, defaultInitrd)
+
+}
+
+func findResource(kind, target, defaultValue string) string {
+
+	// first: try to find the referenced resource in the local directory
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Printf(
+			"find-%s: error getting working directory - using default", kind)
+		return defaultValue
+	}
+	_, err = os.Stat(fmt.Sprintf("%s/%s", wd, target))
+	if err == nil {
+		return fmt.Sprintf("%s/%s", wd, target)
+	}
+
+	// second: if we cant find the referenced resource locally, try to find the
+	// it in the rvn installation directory
+	_, err = os.Stat(fmt.Sprintf("/var/rvn/%s/%s", kind, target))
+	if err == nil {
+		return fmt.Sprintf("/var/rvn/%s/%s", kind, target)
+	}
+
+	log.Printf(
+		"find-%s: '%s' not found - using default", kind, target)
+
+	return defaultValue
 }
 
 // Methods ====================================================================
@@ -238,6 +444,41 @@ func (r *Runtime) FreeSubnet(tag string) {
 	}
 }
 
+func (r *Runtime) NewTelnetPort() int {
+
+	port := nextIntFrom(r.TelnetPorts, 4000)
+	r.TelnetPorts = append(r.TelnetPorts, port)
+	r.Save()
+
+	return port
+
+}
+
+func (r *Runtime) FreeTelnetPort(port int) {
+
+	idx := -1
+	for i, x := range r.TelnetPorts {
+		if x == port {
+			idx = i
+			break
+		}
+	}
+
+	if idx != -1 {
+		r.TelnetPorts = remove(r.TelnetPorts, idx)
+	} else {
+		log.Warnf("request to remove unknown telnet port %d", port)
+	}
+
+	r.Save()
+
+}
+
+func remove(s []int, i int) []int {
+	s[len(s)-1], s[i] = s[i], s[len(s)-1]
+	return s[:len(s)-1]
+}
+
 // Functions ==================================================================
 
 func RunModel() error {
@@ -267,6 +508,14 @@ func RunModel() error {
 		return err
 	}
 	topo.Dir = wd
+
+	// add compute the telnet ports for each node and switch
+	for i, _ := range topo.Nodes {
+		topo.Nodes[i].TelnetPort = LoadRuntime().NewTelnetPort()
+	}
+	for i, _ := range topo.Switches {
+		topo.Switches[i].Host.TelnetPort = LoadRuntime().NewTelnetPort()
+	}
 
 	buf, err := json.MarshalIndent(topo, "", "  ")
 	if err != nil {
@@ -344,4 +593,32 @@ func ReadTopo(src []byte) (Topo, error) {
 	}
 
 	return topo, nil
+}
+
+func Rvn2Xir(t *Topo) *xir.Net {
+
+	net := xir.NewNet()
+
+	for _, x := range t.Nodes {
+		net.Node().Set(xir.Props{"name": x.Name})
+	}
+	for _, x := range t.Switches {
+		net.Node().Set(xir.Props{"name": x.Name})
+	}
+	for _, x := range t.Links {
+		a := net.GetNodeByName(x.Endpoints[0].Name)
+		if a == nil {
+			log.Errorf("bad node name %s", x.Endpoints[0].Name)
+			continue
+		}
+		b := net.GetNodeByName(x.Endpoints[1].Name)
+		if b == nil {
+			log.Errorf("bad node name %s", x.Endpoints[1].Name)
+			continue
+		}
+		net.Link(a.Endpoint(), b.Endpoint())
+	}
+
+	return net
+
 }
