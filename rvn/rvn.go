@@ -290,7 +290,6 @@ func LoadTopo() (Topo, error) {
 		log.Printf("loadtopo: could not determine working directory")
 		return Topo{}, err
 	}
-
 	path := wd + "/topo.json"
 	return LoadTopoFile(path)
 }

@@ -75,6 +75,7 @@
       file: path={{item.path}} state={{item.state}}
       with_items:
         - {path: /var/rvn/img, state: directory}
+        - {path: /var/rvn/img/user, state: directory}
         - {path: /var/rvn/kernel, state: directory}
         - {path: /var/rvn/initrd, state: directory}
         - {path: /var/rvn/template, state: directory}
@@ -84,20 +85,6 @@
         - {path: /usr/local/lib/rvn, state: directory}
         - {path: /root/.ssh, state: directory}
 
-    - name: fetch base images
-      get_url:
-        url: http://mirror.deterlab.net/rvn/img/{{item}}
-        dest: /var/rvn/img/{{item}}
-      with_items:
-        - cumulusvx-3.5.qcow2
-        - debian-stretch.qcow2
-        - fedora-27.qcow2
-        - freebsd-11.qcow2
-        - freebsd-11r.qcow2
-        - freebsd-11d.qcow2
-        - raspbian:a9.qcow2
-        - ubuntu-1604.qcow2
-
     - name: fetch kernels
       get_url:
         url: http://mirror.deterlab.net/rvn/kernel/{{item}}
@@ -105,9 +92,6 @@
       with_items:
         - u-boot:a9
         - zImage:a9
-
-    - name: create netboot base image
-      command: qemu-img create /var/rvn/img/netboot.qcow2 25G
 
     - name: install ssh keys
       get_url:
@@ -202,19 +186,19 @@
         name: "{{redis_package}}"
         state: restarted
     
-    - name: fetch rvn binary
-      get_url:
-        url: https://github.com/rcgoodfellow/raven/releases/download/v0.1/rvn-libvirt4
-        dest: /usr/local/bin/rvn
-        mode: "a+x"
-      when: ansible_distribution != "Debian" and ansible_distribution != "Ubuntu"
+    #- name: fetch rvn binary
+    #  get_url:
+    #    url: https://github.com/rcgoodfellow/raven/releases/download/v0.1/rvn-libvirt4
+    #    dest: /usr/local/bin/rvn
+    #    mode: "a+x"
+    #  when: ansible_distribution != "Debian" and ansible_distribution != "Ubuntu"
 
-    - name: fetch rvn binary
-      get_url:
-        url: https://github.com/rcgoodfellow/raven/releases/download/v0.1/rvn-libvirt1
-        dest: /usr/local/bin/rvn
-        mode: "a+x"
-      when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+    #- name: fetch rvn binary
+    #  get_url:
+    #    url: https://github.com/rcgoodfellow/raven/releases/download/v0.1/rvn-libvirt1
+    #    dest: /usr/local/bin/rvn
+    #    mode: "a+x"
+    #  when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
     
     - name: install rvn-cli in /usr/bin
       file:
