@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/isi-lincoln/raven/rvn"
+	"github.com/rcgoodfellow/raven/rvn"
 	"github.com/sparrc/go-ping"
 	"io"
 	"log"
