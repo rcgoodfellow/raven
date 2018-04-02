@@ -2,16 +2,13 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"github.com/fatih/color"
 	//    "github.com/rcgoodfellow/raven/rvn"
 	"github.com/isi-lincoln/raven/rvn"
+	librvnhelp "github.com/isi-lincoln/raven/rvnhelper"
 	"github.com/sparrc/go-ping"
-	"io"
 	"log"
-	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -466,7 +463,7 @@ func CheckRvnImages(topo rvn.Topo) {
 	// for each unique image, check that it exists, if not, download it
 	for i := 0; i < len(images); i++ {
 		// parse the uri reference (with golang url parser)
-		parsedURL, _ := url.Parse(images[i])
+		parsedURL := librvnhelp.ValidateURL(images[i])
 
 		// NOTE: local images need to be prefixed with absolute path or ./
 		remoteHost := parsedURL.Host
@@ -476,7 +473,7 @@ func CheckRvnImages(topo rvn.Topo) {
 			// very first thing, check if url is nil or empty, then we need to create
 			// a netboot image if it does not exist
 			if parsedURL.String() == "" {
-				err := CreateNetbootImage()
+				err := librvnhelp.CreateNetbootImage()
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -499,7 +496,7 @@ func CheckRvnImages(topo rvn.Topo) {
 					} else {
 						// no error, so image does exist, so lets copy from path to /var/rvn/img
 						log.Println("Downloading from: " + images[i] + " to: " + filePath)
-						err = CopyLocalFile(images[i], filePath)
+						err = librvnhelp.CopyLocalFile(images[i], filePath)
 						if err != nil {
 							log.Fatalln(err)
 						}
@@ -514,7 +511,7 @@ func CheckRvnImages(topo rvn.Topo) {
 				if err != nil {
 					remotePath := "https://mirror.deterlab.net/rvn/img/" + images[i]
 					log.Println("Attempting copy from: " + remotePath + " to: " + filePath)
-					var dl_err error = DownloadFile(filePath, remotePath)
+					var dl_err error = librvnhelp.DownloadFile(filePath, remotePath)
 					// we tried to find the image on deterlab mirror, but could not, error
 					if dl_err != nil {
 						log.Fatalln(dl_err)
@@ -523,7 +520,7 @@ func CheckRvnImages(topo rvn.Topo) {
 			}
 			// if the host is remote, we should assume we are going off-world to get image
 		} else {
-			subPath, imageName, _ := ParseURL(parsedURL)
+			subPath, imageName, _ := librvnhelp.ParseURL(parsedURL)
 			filePath := "/var/rvn/img/user/" + subPath
 			_, err := os.Stat(filePath + imageName)
 			// path to image does not exist, we will need to download it
@@ -535,110 +532,11 @@ func CheckRvnImages(topo rvn.Topo) {
 				}
 				// now try to download the image to the correct lcoation
 				log.Println("Attempting copy from: " + parsedURL.String() + " to: " + filePath + imageName)
-				dl_err := DownloadURL(parsedURL, filePath, imageName)
+				dl_err := librvnhelp.DownloadURL(parsedURL, filePath, imageName)
 				if dl_err != nil {
 					log.Fatalln(dl_err)
 				}
 			}
 		}
 	}
-}
-
-// https://gist.github.com/elazarl/5507969
-func CopyLocalFile(src, dst string) error {
-	s, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer s.Close()
-	d, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	if _, err := io.Copy(d, s); err != nil {
-		d.Close()
-		return err
-	}
-	return d.Close()
-}
-
-// return a path, which we will create a directory tree with path[0]/path[1]/.../path[n]/image
-func ParseURL(parsedURL *url.URL) (path string, image string, err error) {
-	// Path is easier to use than RawPath
-	remoteFullPath := parsedURL.Path
-	splitPath := strings.Split(remoteFullPath, "/")
-	// get the image name, dont let user specify qcow2
-	// when rvn goes beyond qcow2, need to use correct format
-	image = splitPath[len(splitPath)-1]
-	// get the scheme used
-	// create necessary variables
-	var userName string
-	var hostName string
-	// now to create a directory tree from the path, omit scheme and opaque
-	if parsedURL.Opaque != "" {
-		err = errors.New("Opaque URL not implemented")
-		return path, image, err
-	}
-	if parsedURL.User != nil {
-		userName = parsedURL.User.Username()
-		path = userName + "/"
-	}
-	if parsedURL.Host != "" {
-		hostName = parsedURL.Host
-		path = path + hostName + "/"
-	}
-	// ftp://user@host:/path will become user/host/path.../
-	pathMinusImage := strings.Join(splitPath[:len(splitPath)-1], "/")
-	path += pathMinusImage + "/"
-	return path, image, nil
-}
-
-func DownloadURL(parsedURL *url.URL, downloadPath string, imageName string) error {
-	URIScheme := parsedURL.Scheme
-	// if no scheme for downloading file is provided, default to https
-	// TODO: enforce HTTPS -- do not allow http, redirect
-	if URIScheme == "https" {
-		DownloadFile(downloadPath+imageName, parsedURL.String())
-	} else if URIScheme == "http" {
-		err := errors.New("http is not supported, please use https!")
-		return err
-	} else if URIScheme == "" {
-		DownloadFile(downloadPath+imageName, parsedURL.String())
-	} else {
-		err := errors.New(parsedURL.Scheme + " is not currently implemented!")
-		return err
-	}
-	return nil
-}
-
-// https://golangcode.com/download-a-file-from-a-url/
-func DownloadFile(filepath string, url string) error {
-	// Create the file
-	out, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func CreateNetbootImage() error {
-	cmd := exec.Command("qemu-img", "create", "/var/rvn/img/netboot", "25G")
-	log.Printf("Creating netboot image")
-	err := cmd.Run()
-	return err
 }
