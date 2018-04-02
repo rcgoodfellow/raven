@@ -20,7 +20,6 @@
         - git
         - vim
         - tmux
-        - golang
     
     - name: Set redis listening address
       lineinfile:
@@ -34,40 +33,13 @@
     - name: Install redis-python
       command: pip3 install redis
 
-    - file:
-        path: /home/rvn/.go/src/github.com/rcgoodfellow
-        state: directory
-        owner: rvn
-        group: rvn
 
-    - file:
-        src: /opt/walrus
-        dest: /home/rvn/.go/src/github.com/rcgoodfellow/walrustf
-        state: link
-        owner: rvn
-        group: rvn
     
-    - lineinfile:
-        line: "{{ item }}"
-        path: /home/rvn/.bashrc
-      with_items:
-        - export GOPATH=/home/rvn/.go
-        - export PATH=/home/rvn/.go/bin:$PATH
-    
-    - shell: go get {{item}}
-      environment:
-        GOPATH: /home/rvn/.go
-      with_items:
-        - github.com/fatih/color
-        - github.com/go-redis/redis
+    - get_url:
+        url: https://github.com/rcgoodfellow/walrustf/releases/download/v0.1/wtf
+        dest: /usr/local/bin/wtf
+        mode: "a+x"
 
-    - shell: go install
-      args:
-        chdir: /home/rvn/.go/src/github.com/rcgoodfellow/walrustf/wtf
-      environment:
-        GOPATH: /home/rvn/.go
-        GOBIN: /home/rvn/.go/bin
-    
     - blockinfile:
         path: /etc/ansible/hosts
         content: |

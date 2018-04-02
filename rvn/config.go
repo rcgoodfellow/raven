@@ -2,13 +2,14 @@ package rvn
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
 	"text/template"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func GenConfigAll(topo Topo) {

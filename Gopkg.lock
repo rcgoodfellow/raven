@@ -2,6 +2,21 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/ajstarks/svgo"
+  packages = ["."]
+  revision = "644b8db467afccf19a0692a3e31a1868e4287ab8"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/ceftb/xir"
+  packages = [
+    "lang/go",
+    "tools/viz"
+  ]
+  revision = "db18524e845403d092306872eea98e8fad07d3d2"
+
+[[projects]]
   name = "github.com/fatih/color"
   packages = ["."]
   revision = "507f6050b8568533fb3f5504de8e5205fa62a114"
@@ -47,10 +62,28 @@
   version = "v0.0.3"
 
 [[projects]]
+  name = "github.com/satori/go.uuid"
+  packages = ["."]
+  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
+  version = "v1.2.0"
+
+[[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
+  version = "v1.0.5"
+
+[[projects]]
   branch = "master"
   name = "github.com/sparrc/go-ping"
   packages = ["."]
   revision = "416e72114cd1edce2f287648f935a60dfe6cf40e"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["ssh/terminal"]
+  revision = "21652f85b0fdddb6c2b6b77a5beca5c5a908174a"
 
 [[projects]]
   branch = "master"
@@ -68,12 +101,15 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix"]
+  packages = [
+    "unix",
+    "windows"
+  ]
   revision = "dd2ff4accc098aceecb86b36eaa7829b2a17b1c9"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3f5370a17e8141734b8759b4bafabbf8e3c082b4afddba1ec7719c271325cd9a"
+  inputs-digest = "90e00d93de13b16fec7e268bf0a9b3090bb9555a2e1b926102dd38f4de714727"
   solver-name = "gps-cdcl"
   solver-version = 1

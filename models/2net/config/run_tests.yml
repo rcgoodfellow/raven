@@ -4,7 +4,7 @@
   tasks:
 
     - name: run tests
-      shell: /home/rvn/.go/bin/wtf launch tests.json
+      shell: /usr/local/bin/wtf launch tests.json
       async: 3600
       poll: 0
       args:
