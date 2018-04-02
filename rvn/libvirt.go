@@ -10,6 +10,7 @@ import (
 	xlibvirt "github.com/libvirt/libvirt-go-xml"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"os/exec"
 	"sort"
@@ -533,7 +534,30 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 		return nil
 	}
 
-	baseImage := "/var/rvn/img/" + h.Image
+	// location of baseImage depends on how image was imported
+	baseImage := "/var/rvn/img/"
+	// the instance name/location will depend on how it is parsed
+	// if name is empty, then load netboot from /rvn/img
+	if h.Image == "" {
+		baseImage += "netboot"
+		// if name points to a local path or to url
+	} else if len(strings.Split(h.Image, "/")) > 1 {
+		baseImage += "user/"
+		parsedURL, _ := url.Parse(h.Image)
+		remoteHost := parsedURL.Host
+		// if remoteHost is empty, its a local image
+		if remoteHost == "" {
+			path := strings.Split(h.Image, "/")
+			baseImage += path[len(path)-1]
+		} else {
+			subPath, imageName, _ := ParseURL(parsedURL)
+			baseImage += subPath + imageName
+		}
+		// this only leaves names, which default to deterlab and /rvn/img location
+	} else {
+		baseImage += h.Image
+	}
+
 	instanceImage := wd + "/" + h.Name
 	exec.Command("rm", "-f", instanceImage).Run()
 
@@ -563,12 +587,12 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 		},
 		CPU: &xlibvirt.DomainCPU{
 			/*
-				TODO: prefer a bit more discrimination than pure passthrough ....
+			   TODO: prefer a bit more discrimination than pure passthrough ....
 
-				Match: "minimum",
-				Model: &xlibvirt.DomainCPUModel{
-					Value: h.CPU.Model,
-				},
+			   Match: "minimum",
+			   Model: &xlibvirt.DomainCPUModel{
+			       Value: h.CPU.Model,
+			   },
 			*/
 			Mode: "host-passthrough",
 			Topology: &xlibvirt.DomainCPUTopology{
@@ -972,4 +996,34 @@ func cleanupRpcBind(net *libvirt.Network) {
 		return
 	}
 
+}
+
+// return a path, which we will create a directory tree with path[0]/path[1]/.../path[n]/image
+func ParseURL(parsedURL *url.URL) (path string, image string, err error) {
+	// Path is easier to use than RawPath
+	remoteFullPath := parsedURL.Path
+	splitPath := strings.Split(remoteFullPath, "/")
+	// get the image name, dont let user specify qcow2
+	// when rvn goes beyond qcow2, need to use correct format
+	image = splitPath[len(splitPath)-1]
+	// get the scheme used
+	// create necessary variables
+	var userName string
+	var hostName string
+	// now to create a directory tree from the path, omit scheme and opaque
+	if parsedURL.Opaque != "" {
+		return path, image, err
+	}
+	if parsedURL.User != nil {
+		userName = parsedURL.User.Username()
+		path = userName + "/"
+	}
+	if parsedURL.Host != "" {
+		hostName = parsedURL.Host
+		path = path + hostName + "/"
+	}
+	// ftp://user@host:/path will become user/host/path.../
+	pathMinusImage := strings.Join(splitPath[:len(splitPath)-1], "/")
+	path += pathMinusImage + "/"
+	return path, image, nil
 }
