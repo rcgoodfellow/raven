@@ -11,15 +11,7 @@
     - apt: name={{item}} state=latest
       with_items:
         - vim
-        - golang-1.7
         - bash-completion
-        - git
-        - build-essential
-
-    - file:
-        src: /usr/lib/go-1.7/bin/go
-        dest: /usr/bin/go
-        state: link
 
     - copy: src={{item.src}} dest={{item.dest}} remote_src=True
       with_items:
@@ -32,39 +24,14 @@
         path: /root/.go/src/github.com/rcgoodfellow
         state: directory
 
-    - file:
-        src: "/opt/{{item}}"
-        dest: "/root/.go/src/github.com/rcgoodfellow/{{item}}"
-        state: link
-      with_items:
-        - agx
-        - netlink
-
-    - lineinfile:
-        line: "{{ item }}"
-        path: /root/.bashrc
-      with_items:
-        - export GOPATH=/root/.go
-        - export GOBIN=/root/.go/bin
-        - export PATH=/root/.go/bin:$PATH
-    
-    - shell: go get {{item}}
-      environment:
-        GOPATH: /root/.go
-      with_items:
-        - github.com/pkg/profile
-        - github.com/vishvananda/netlink/nl
-
-    - shell: go install
-      args:
-        chdir: /root/.go/src/github.com/rcgoodfellow/agx/qbridge
-      environment:
-        GOPATH: /root/.go
-        GOBIN: /root/.go/bin
-
     - service:
         name: snmpd
         state: restarted
+
+    - get_url:
+        url: https://github.com/rcgoodfellow/agx/releases/download/v0.1/qbridge
+        dest: /usr/local/bin/qbridge
+        mode: "a+x"
 
     - shell: "{{item}}"
       with_items:
@@ -93,4 +60,5 @@
         - bridge vlan del vid 1 dev swp3
         - bridge vlan del vid 1 dev swp4
 
-    - shell: nohup /root/.go/bin/qbridge > /dev/null 2>&1  &
+    - shell: nohup /usr/local/bin/qbridge > /dev/null 2>&1  &
+

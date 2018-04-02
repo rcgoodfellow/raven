@@ -1,0 +1,17 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+
+    - name: bring up network
+      shell: "{{item}}"
+      with_items:
+        - ip link add bridge type bridge
+        - ip link set swp1 master bridge
+        - ip link set swp2 master bridge
+        - ip link set swp3 master bridge
+        - ip link set up bridge
+        - ip link set up swp1
+        - ip link set up swp2
+        - ip link set up swp3

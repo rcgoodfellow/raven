@@ -3,16 +3,17 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
-	//    "github.com/rcgoodfellow/raven/rvn"
-	"github.com/isi-lincoln/raven/rvn"
-	librvnhelp "github.com/isi-lincoln/raven/rvnhelper"
-	"github.com/sparrc/go-ping"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/ceftb/xir/tools/viz"
+	"github.com/fatih/color"
+	"github.com/rcgoodfellow/raven/rvn"
+	librvnhelp "github.com/rcgoodfellow/raven/rvnhelper"
+	"github.com/sparrc/go-ping"
 )
 
 func main() {
@@ -37,6 +38,8 @@ func main() {
 		doDestroy()
 	case "status":
 		doStatus()
+	case "viz":
+		doViz()
 
 	case "ssh":
 		if len(os.Args) < 3 {
@@ -171,6 +174,19 @@ func doSsh(node string) {
 
 	fmt.Printf(
 		"ssh -o StrictHostKeyChecking=no -i /var/rvn/ssh/rvn rvn@%s\n", ds.IP)
+
+}
+
+func doViz() {
+
+	topo, err := rvn.LoadTopo()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	x := rvn.Rvn2Xir(&topo)
+
+	viz.NetSvg(topo.Name, x)
 
 }
 
@@ -386,7 +402,7 @@ func doWipe(args []string) {
 	for _, x := range args {
 		err = rvn.WipeNode(topo, x)
 		if err != nil {
-			log.Println("%v", err)
+			log.Printf("%v", err)
 		}
 	}
 
@@ -410,13 +426,14 @@ func domString(ds rvn.DomStatus) string {
 
 func usage() {
 	s := red("usage:\n")
-	s += fmt.Sprintf("  %s [%s | %s | %s | %s | %s | %s] \n", blue("rvn"),
+	s += fmt.Sprintf("  %s [%s | %s | %s | %s | %s | %s | %s] \n", blue("rvn"),
 		green("build"),
 		green("deploy"),
 		green("configure"),
 		green("shutdown"),
 		green("destroy"),
 		green("status"),
+		green("viz"),
 	)
 	s += fmt.Sprintf("  %s %s node\n", blue("rvn"), green("ssh"))
 	s += fmt.Sprintf("  %s %s node\n", blue("rvn"), green("ip"))

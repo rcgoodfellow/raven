@@ -67,21 +67,21 @@ Topo = (nodes, images, links, switches) => ({
 //// Units
 ////
 function B(value) {
-  return { 'value': value, 'unit': 'b' };
+  return { 'value': value, 'unit': 'B' };
 }
 
 function KB(value) {
-  return { 'value': value, 'unit': 'KB' };
+  return { 'value': value, 'unit': 'KiB' };
 }
 
 function MB(value) {
-  return { 'value': value, 'unit': 'MB' };
+  return { 'value': value, 'unit': 'MiB' };
 }
 
 function GB(value) {
-  return { 'value': value, 'unit': 'GB' };
+  return { 'value': value, 'unit': 'GiB' };
 }
 
 function TB(value) {
-  return { 'value': value, 'unit': 'TB' };
+  return { 'value': value, 'unit': 'TiB' };
 }

@@ -1,9 +1,10 @@
 package rvn
 
 import (
-	"github.com/go-redis/redis"
-	"log"
 	"time"
+
+	"github.com/go-redis/redis"
+	log "github.com/sirupsen/logrus"
 )
 
 var db *redis.Client
