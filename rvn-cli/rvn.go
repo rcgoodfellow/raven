@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
-//	"github.com/rcgoodfellow/raven/rvn"
+	//    "github.com/rcgoodfellow/raven/rvn"
 	"github.com/isi-lincoln/raven/rvn"
 	"github.com/sparrc/go-ping"
 	"io"
@@ -446,7 +446,7 @@ var bold = color.New(color.Bold).SprintFunc()
 
 func CheckRvnImages(topo rvn.Topo) {
 	var images []string = make([]string, 0)
-	// FIXME: NO EXTENTIONS!!
+	// NOTE: moving over to an extentionless naming scheme
 	// for each Node, get the image required
 	for i := 0; i < len(topo.Nodes); i++ {
 		var currentImg string = topo.Nodes[i].Host.Image
@@ -468,19 +468,29 @@ func CheckRvnImages(topo rvn.Topo) {
 		// parse the uri reference (with golang url parser)
 		parsedURL, _ := url.Parse(images[i])
 
-		// NOTE: local images need to be prefixed with absolute path or ./ (accesible by root)
-		// NOTE: image name cannot contain qcow2! qcow2 is added by rvn in libvirt.go
+		// NOTE: local images need to be prefixed with absolute path or ./
 		remoteHost := parsedURL.Host
 
-		// if there is no host to contact remotely, look locally, see note above on naming
+		// there is no remote host, so the image is local
 		if remoteHost == "" {
+			// very first thing, check if url is nil or empty, then we need to create
+			// a netboot image if it does not exist
+			if parsedURL.String() == "" {
+				err := CreateNetbootImage()
+				if err != nil {
+					log.Fatalln(err)
+				}
+				break
+			}
 			// check if this is local image path, or deterlab path
 			splitPath := strings.Split(images[i], "/")
+			// a local image must be prefixed with atleast one slash, / or ./, therefore
+			// we can check the length of of the split on / to determin if deterlab or local image
 			if len(splitPath) > 1 {
+				// place user images in /var/rvn/img/user
 				filePath := "/var/rvn/img/user/" + splitPath[len(splitPath)-1]
 				_, err := os.Stat(filePath)
-				// if there is an err, file does not exist, lets also check that the file
-				// exists at the pathway, if it does, copy file to /var/rvn/img
+				// if file exists, copy file to /var/rvn/img
 				if err != nil {
 					_, err = os.Stat(images[i])
 					if err != nil {
@@ -488,15 +498,16 @@ func CheckRvnImages(topo rvn.Topo) {
 						log.Fatalln(err)
 					} else {
 						// no error, so image does exist, so lets copy from path to /var/rvn/img
-						log.Println("Attempting copy from: " + images[i] + " to: " + filePath)
+						log.Println("Downloading from: " + images[i] + " to: " + filePath)
 						err = CopyLocalFile(images[i], filePath)
 						if err != nil {
 							log.Fatalln(err)
 						}
 					}
 				}
-				// is only given by a name, so we can therefore assume it is a deterlab.net image
+				// if len == 1, we are given a name, we assume the named image is hosted on deterlab
 			} else {
+				// official images go in /var/rvn/img
 				filePath := "/var/rvn/img/" + images[i]
 				_, err := os.Stat(filePath)
 				// if there is an err, file does not exist, download it
@@ -623,4 +634,11 @@ func DownloadFile(filepath string, url string) error {
 	}
 
 	return nil
+}
+
+func CreateNetbootImage() error {
+	cmd := exec.Command("qemu-img", "create", "/var/rvn/img/netboot", "25G")
+	log.Printf("Creating netboot image")
+	err := cmd.Run()
+	return err
 }
