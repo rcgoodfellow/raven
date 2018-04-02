@@ -15,9 +15,9 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	librvnhelp "github.com/rcgoodfellow/raven/rvnhelper"
 	"github.com/libvirt/libvirt-go"
 	xlibvirt "github.com/libvirt/libvirt-go-xml"
-	librvnhelp "github.com/rcgoodfellow/raven/rvnhelper"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -551,33 +551,6 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 		return x86Dom(h, t)
 
 	}
-
-	// location of baseImage depends on how image was imported
-	baseImage := "/var/rvn/img/"
-	// the instance name/location will depend on how it is parsed
-	// if name is empty, then load netboot from /rvn/img
-	if h.Image == "" {
-		baseImage += "netboot"
-		// if name points to a local path or to url
-	} else if len(strings.Split(h.Image, "/")) > 1 {
-		baseImage += "user/"
-		parsedURL, _ := url.Parse(h.Image)
-		remoteHost := parsedURL.Host
-		// if remoteHost is empty, its a local image
-		if remoteHost == "" {
-			path := strings.Split(h.Image, "/")
-			baseImage += path[len(path)-1]
-		} else {
-			subPath, imageName, _ := librvnhelp.ParseURL(parsedURL)
-			baseImage += subPath + imageName
-		}
-		// this only leaves names, which default to deterlab and /rvn/img location
-	} else {
-		baseImage += h.Image
-	}
-
-	instanceImage := wd + "/" + h.Name
-	exec.Command("rm", "-f", instanceImage).Run()
 }
 
 func x86Dom(h *Host, t *Topo) *xlibvirt.Domain {
@@ -710,8 +683,31 @@ func createImage(h *Host) string {
 		return ""
 	}
 
-	baseImage := "/var/rvn/img/" + h.Image + ".qcow2"
-	instanceImage := wd + "/" + h.Name + ".qcow2"
+	// location of baseImage depends on how image was imported
+	baseImage := "/var/rvn/img/"
+	// the instance name/location will depend on how it is parsed
+	// if name is empty, then load netboot from /rvn/img
+	if h.Image == "" {
+		baseImage += "netboot"
+		// if name points to a local path or to url
+	} else if len(strings.Split(h.Image, "/")) > 1 {
+		baseImage += "user/"
+		parsedURL, _ := url.Parse(h.Image)
+		remoteHost := parsedURL.Host
+		// if remoteHost is empty, its a local image
+		if remoteHost == "" {
+			path := strings.Split(h.Image, "/")
+			baseImage += path[len(path)-1]
+		} else {
+			subPath, imageName, _ := librvnhelp.ParseURL(parsedURL)
+			baseImage += subPath + imageName
+		}
+		// this only leaves names, which default to deterlab and /rvn/img location
+	} else {
+		baseImage += h.Image
+	}
+
+	instanceImage := wd + "/" + h.Name
 	exec.Command("rm", "-f", instanceImage).Run()
 
 	out, err := exec.Command(
