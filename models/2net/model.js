@@ -32,8 +32,15 @@ walrus = {
 
 zwitch = {
   'name': 'nimbus',
-  'image': 'cumulusvx-3.5',
+  'image': 'cumulusvx-3.5-mvrf',
   'os': 'linux',
+  'defaultdisktype': { 'bus': 'virtio', 'dev': 'vd' },
+  'cpu': {
+    'cores': 1
+  },
+  'memory': {
+    'capacity': GB(2)
+  },
   'mounts': [
     { 'source': env.PWD+'/config/files/nimbus', 'point': '/tmp/config' }
   ]

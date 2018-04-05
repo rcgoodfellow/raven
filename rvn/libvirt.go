@@ -552,6 +552,14 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 
 }
 
+func createModel(h *Host) *xlibvirt.DomainCPUModel {
+	if h.CPU.Model == "" {
+		return nil
+	} else {
+		return &xlibvirt.DomainCPUModel{Value: h.CPU.Model}
+	}
+}
+
 func x86Dom(h *Host, t *Topo) *xlibvirt.Domain {
 
 	instanceImage := createImage(h)
@@ -573,15 +581,11 @@ func x86Dom(h *Host, t *Topo) *xlibvirt.Domain {
 			Cmdline: h.Cmdline,
 		},
 		CPU: &xlibvirt.DomainCPU{
-			/*
-				TODO: prefer a bit more discrimination than pure passthrough ....
 
-				Match: "minimum",
-				Model: &xlibvirt.DomainCPUModel{
-					Value: h.CPU.Model,
-				},
-			*/
-			Mode: "host-passthrough",
+			Match: "minimum",
+			//TODO: plumb this capability in ....
+			//Mode: "host-passthrough",
+			Model: createModel(h),
 			Topology: &xlibvirt.DomainCPUTopology{
 				Sockets: h.CPU.Sockets,
 				Cores:   h.CPU.Cores,

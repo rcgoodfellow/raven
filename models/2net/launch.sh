@@ -21,20 +21,20 @@ phase "Fetching walrus"
 
 phase "Building"
   echo "clearing out any artifacts from previous runs"
-  rvn destroy
+  sudo -E rvn destroy
   echo "building system"
-  rvn build
+  sudo -E rvn build
 
 phase "Deploying"
   echo "launching vms"
-  rvn deploy
+  sudo -E rvn deploy
   echo "waiting for vms to come on network"
-  rvn pingwait control walrus nimbus n0 n1
+  sudo -E rvn pingwait control walrus nimbus n0 n1
 
 phase "Configuring"
-  rvn configure
+  sudo -E rvn configure
 
 phase "Testing"
   echo "launching tests"
-  rvn ansible walrus config/run_tests.yml
+  sudo -E rvn ansible walrus config/run_tests.yml
   wtf -collector=`rvn ip walrus` watch config/files/walrus/tests.json
