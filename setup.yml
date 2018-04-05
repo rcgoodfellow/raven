@@ -86,7 +86,7 @@
 
     - name: fetch base images
       get_url:
-        url: http://mirror.deterlab.net/rvn/img/{{item}}
+        url: https://mirror.deterlab.net/rvn/img/{{item}}
         dest: /var/rvn/img/{{item}}
       with_items:
         - cumulusvx-3.5.qcow2
@@ -101,15 +101,18 @@
 
     - name: fetch kernels
       get_url:
-        url: http://mirror.deterlab.net/rvn/kernel/{{item}}
+        url: https://mirror.deterlab.net/rvn/kernel/{{item}}
         dest: /var/rvn/kernel/{{item}}
+      with_items:
+        - u-boot:a9
+        - zImage:a9
 
     - name: create netboot base image
       command: qemu-img create /var/rvn/img/netboot.qcow2 25G
 
     - name: install ssh keys
       get_url:
-        url: http://mirror.deterlab.net/rvn/{{item}}
+        url: https://mirror.deterlab.net/rvn/{{item}}
         dest: /var/rvn/ssh/{{item}}
       with_items:
         - rvn
@@ -222,7 +225,7 @@
 
     - name: fetch utilities
       get_url:
-        url: http://mirror.deterlab.net/rvn/util/{{item}}
+        url: https://mirror.deterlab.net/rvn/util/{{item}}
         dest: /var/rvn/util/{{item}}
       with_items:
         - iamme-linux
