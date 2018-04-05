@@ -32,7 +32,7 @@ walrus = {
 
 zwitch = {
   'name': 'nimbus',
-  'image': 'cumulusvx-3.5-mvrf',
+  'image': 'cumulusvx-3.5',
   'os': 'linux',
   'defaultdisktype': { 'bus': 'virtio', 'dev': 'vd' },
   'cpu': {
