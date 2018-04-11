@@ -140,8 +140,8 @@ var defaults = struct {
 	X86_64: &Platform{
 		Name:     "x86_64",
 		Arch:     "x86_64",
-		Machine:  "pc-i440fx-2.10",
-		CPU:      &CPU{Sockets: 1, Cores: 1, Threads: 1, Model: "kvm64"},
+		Machine:  "q35",
+		CPU:      &CPU{Sockets: 1, Cores: 1, Threads: 1},
 		Memory:   &Memory{Capacity: UnitValue{Value: 1, Unit: "GB"}},
 		Image:    "netboot",
 		Nic:      "virtio",

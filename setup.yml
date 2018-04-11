@@ -87,12 +87,15 @@
 
     - name: fetch kernels
       get_url:
-        url: http://mirror.deterlab.net/rvn/kernel/{{item}}
+        url: https://mirror.deterlab.net/rvn/kernel/{{item}}
         dest: /var/rvn/kernel/{{item}}
+      with_items:
+        - u-boot:a9
+        - zImage:a9
 
     - name: install ssh keys
       get_url:
-        url: http://mirror.deterlab.net/rvn/{{item}}
+        url: https://mirror.deterlab.net/rvn/{{item}}
         dest: /var/rvn/ssh/{{item}}
       with_items:
         - rvn
@@ -205,7 +208,7 @@
 
     - name: fetch utilities
       get_url:
-        url: http://mirror.deterlab.net/rvn/util/{{item}}
+        url: https://mirror.deterlab.net/rvn/util/{{item}}
         dest: /var/rvn/util/{{item}}
       with_items:
         - iamme-linux

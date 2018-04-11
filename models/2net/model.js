@@ -34,6 +34,13 @@ zwitch = {
   'name': 'nimbus',
   'image': 'cumulusvx-3.5',
   'os': 'linux',
+  'defaultdisktype': { 'bus': 'virtio', 'dev': 'vd' },
+  'cpu': {
+    'cores': 1
+  },
+  'memory': {
+    'capacity': GB(2)
+  },
   'mounts': [
     { 'source': env.PWD+'/config/files/nimbus', 'point': '/tmp/config' }
   ]
