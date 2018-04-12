@@ -712,7 +712,7 @@ func createImage(h *Host) string {
 	}
 
 	instanceImage := wd + "/" + h.Name
-	exec.Command("rm", "-f", instanceImage).Run()
+	os.RemoveAll(instanceImage)
 
 	out, err := exec.Command(
 		"qemu-img",

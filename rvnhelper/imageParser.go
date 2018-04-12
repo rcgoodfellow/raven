@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -53,29 +54,30 @@ func ParseURL(parsedURL *url.URL) (path string, image string, err error) {
 	}
 	if parsedURL.User != nil {
 		userName = parsedURL.User.Username()
-		path = userName + "/"
+		path = filepath.Join(userName, "/")
 	}
 	if parsedURL.Host != "" {
 		hostName = parsedURL.Host
-		path = path + hostName + "/"
+		path = filepath.Join(path, hostName, "/")
 	}
 	// ftp://user@host:/path will become user/host/path.../
 	pathMinusImage := strings.Join(splitPath[:len(splitPath)-1], "/")
-	path += pathMinusImage + "/"
+	path = filepath.Join(path, pathMinusImage, "/")
 	return path, image, nil
 }
 
 func DownloadURL(parsedURL *url.URL, downloadPath string, imageName string) error {
 	URIScheme := parsedURL.Scheme
+	var err error
 	// if no scheme for downloading file is provided, default to https
 	// TODO: enforce HTTPS -- do not allow http, redirect
 	if URIScheme == "https" {
-		DownloadFile(downloadPath+imageName, parsedURL.String())
+		err = DownloadFile(filepath.Join(downloadPath, imageName), parsedURL.String())
 	} else if URIScheme == "http" {
-		err := errors.New("http is not supported, please use https!")
+		err = errors.New("http is not supported, please use https!")
 		return err
 	} else if URIScheme == "" {
-		DownloadFile(downloadPath+imageName, parsedURL.String())
+		DownloadFile(filepath.Join(downloadPath, imageName), parsedURL.String())
 	} else {
 		err := errors.New(parsedURL.Scheme + " is not currently implemented!")
 		return err
