@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -459,26 +460,26 @@ var yellow = color.New(color.FgYellow).SprintFunc()
 var bold = color.New(color.Bold).SprintFunc()
 
 func CheckRvnImages(topo rvn.Topo) {
-	var images []string = make([]string, 0)
+	var images []string
 	// NOTE: moving over to an extentionless naming scheme
 	// for each Node, get the image required
-	for i := 0; i < len(topo.Nodes); i++ {
+	for i := range topo.Nodes {
 		var currentImg string = topo.Nodes[i].Host.Image
 		// no way to check existance
 		var exists bool = false
-		for j := 0; j < len(images); j++ {
+		for j := range images {
 			if currentImg == images[j] {
 				exists = true
 				break
 			}
 		}
 		// we did not find image, add it to our image list
-		if exists != true {
+		if !exists {
 			images = append(images, currentImg)
 		}
 	}
 	// for each unique image, check that it exists, if not, download it
-	for i := 0; i < len(images); i++ {
+	for i := range images {
 		// parse the uri reference (with golang url parser)
 		parsedURL := librvnhelp.ValidateURL(images[i])
 
@@ -502,7 +503,7 @@ func CheckRvnImages(topo rvn.Topo) {
 			// we can check the length of of the split on / to determin if deterlab or local image
 			if len(splitPath) > 1 {
 				// place user images in /var/rvn/img/user
-				filePath := "/var/rvn/img/user/" + splitPath[len(splitPath)-1]
+				filePath := filepath.Join("/var/rvn/img/user/", splitPath[len(splitPath)-1])
 				_, err := os.Stat(filePath)
 				// if file exists, copy file to /var/rvn/img
 				if err != nil {
@@ -522,7 +523,7 @@ func CheckRvnImages(topo rvn.Topo) {
 				// if len == 1, we are given a name, we assume the named image is hosted on deterlab
 			} else {
 				// official images go in /var/rvn/img
-				filePath := "/var/rvn/img/" + images[i]
+				filePath := filepath.Join("/var/rvn/img/", images[i])
 				_, err := os.Stat(filePath)
 				// if there is an err, file does not exist, download it
 				if err != nil {
@@ -538,8 +539,8 @@ func CheckRvnImages(topo rvn.Topo) {
 			// if the host is remote, we should assume we are going off-world to get image
 		} else {
 			subPath, imageName, _ := librvnhelp.ParseURL(parsedURL)
-			filePath := "/var/rvn/img/user/" + subPath
-			_, err := os.Stat(filePath + imageName)
+			filePath := filepath.Join("/var/rvn/img/user/", subPath)
+			_, err := os.Stat(filepath.Join(filePath, imageName))
 			// path to image does not exist, we will need to download it
 			if err != nil {
 				// first we create all the subdirectorys in the file path

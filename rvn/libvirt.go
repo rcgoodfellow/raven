@@ -210,7 +210,7 @@ func Destroy() {
 		return
 	}
 	topoDir := wd
-	exec.Command("rm", "-rf", topoDir).Run()
+	os.RemoveAll(topoDir)
 
 	for _, x := range topo.Nodes {
 		destroyDomain(topo.QualifyName(x.Name), conn)
