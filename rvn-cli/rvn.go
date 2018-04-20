@@ -478,6 +478,22 @@ func CheckRvnImages(topo rvn.Topo) {
 			images = append(images, currentImg)
 		}
 	}
+	for i := range topo.Switches {
+		var currentImg string = topo.Switches[i].Host.Image
+		// no way to check existance
+		var exists bool = false
+		for j := range images {
+			if currentImg == images[j] {
+				exists = true
+				break
+			}
+		}
+		// we did not find image, add it to our image list
+		if !exists {
+			images = append(images, currentImg)
+		}
+	}
+
 	// for each unique image, check that it exists, if not, download it
 	for i := range images {
 		// parse the uri reference (with golang url parser)
@@ -528,7 +544,7 @@ func CheckRvnImages(topo rvn.Topo) {
 				// if there is an err, file does not exist, download it
 				if err != nil {
 					remotePath := "https://mirror.deterlab.net/rvn/img/" + images[i]
-					log.Println("Attempting copy from: " + remotePath + " to: " + filePath)
+					log.Println("copying : " + remotePath + " to: " + filePath)
 					var dl_err error = librvnhelp.DownloadFile(filePath, remotePath)
 					// we tried to find the image on deterlab mirror, but could not, error
 					if dl_err != nil {
@@ -549,7 +565,7 @@ func CheckRvnImages(topo rvn.Topo) {
 					log.Fatalln(cr_err)
 				}
 				// now try to download the image to the correct lcoation
-				log.Println("Attempting copy from: " + parsedURL.String() + " to: " + filePath + imageName)
+				log.Println("copying: " + parsedURL.String() + " to: " + filePath + imageName)
 				dl_err := librvnhelp.DownloadURL(parsedURL, filePath, imageName)
 				if dl_err != nil {
 					log.Fatalln(dl_err)
