@@ -17,7 +17,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/libvirt/libvirt-go"
 	xlibvirt "github.com/libvirt/libvirt-go-xml"
-	librvnhelp "github.com/rcgoodfellow/raven/rvnhelper"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -706,7 +705,10 @@ func createImage(h *Host) string {
 			path := strings.Split(h.Image, "/")
 			baseImage += path[len(path)-1]
 		} else {
-			subPath, imageName, _ := librvnhelp.ParseURL(parsedURL)
+			subPath, imageName, err := ParseURL(parsedURL)
+			if err != nil {
+				log.Errorf("error parsing URL: %v\n", err)
+			}
 			baseImage += subPath + imageName
 		}
 		// this only leaves names, which default to deterlab and /rvn/img location

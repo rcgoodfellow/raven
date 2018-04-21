@@ -1,9 +1,9 @@
-package rvnhelper
+package rvn
 
 import (
 	"errors"
+	log "github.com/sirupsen/logrus"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"

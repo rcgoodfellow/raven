@@ -13,7 +13,6 @@ import (
 	"github.com/ceftb/xir/tools/viz"
 	"github.com/fatih/color"
 	"github.com/rcgoodfellow/raven/rvn"
-	librvnhelp "github.com/rcgoodfellow/raven/rvnhelper"
 	"github.com/sparrc/go-ping"
 )
 
@@ -497,7 +496,7 @@ func CheckRvnImages(topo rvn.Topo) {
 	// for each unique image, check that it exists, if not, download it
 	for i := range images {
 		// parse the uri reference (with golang url parser)
-		parsedURL := librvnhelp.ValidateURL(images[i])
+		parsedURL := rvn.ValidateURL(images[i])
 
 		// NOTE: local images need to be prefixed with absolute path or ./
 		remoteHost := parsedURL.Host
@@ -507,7 +506,7 @@ func CheckRvnImages(topo rvn.Topo) {
 			// very first thing, check if url is nil or empty, then we need to create
 			// a netboot image if it does not exist
 			if parsedURL.String() == "" {
-				err := librvnhelp.CreateNetbootImage()
+				err := rvn.CreateNetbootImage()
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -530,7 +529,7 @@ func CheckRvnImages(topo rvn.Topo) {
 					} else {
 						// no error, so image does exist, so lets copy from path to /var/rvn/img
 						log.Println("Downloading from: " + images[i] + " to: " + filePath)
-						err = librvnhelp.CopyLocalFile(images[i], filePath)
+						err = rvn.CopyLocalFile(images[i], filePath)
 						if err != nil {
 							log.Fatalln(err)
 						}
@@ -545,7 +544,7 @@ func CheckRvnImages(topo rvn.Topo) {
 				if err != nil {
 					remotePath := "https://mirror.deterlab.net/rvn/img/" + images[i]
 					log.Println("copying : " + remotePath + " to: " + filePath)
-					var dl_err error = librvnhelp.DownloadFile(filePath, remotePath)
+					var dl_err error = rvn.DownloadFile(filePath, remotePath)
 					// we tried to find the image on deterlab mirror, but could not, error
 					if dl_err != nil {
 						log.Fatalln(dl_err)
@@ -554,9 +553,12 @@ func CheckRvnImages(topo rvn.Topo) {
 			}
 			// if the host is remote, we should assume we are going off-world to get image
 		} else {
-			subPath, imageName, _ := librvnhelp.ParseURL(parsedURL)
+			subPath, imageName, err := rvn.ParseURL(parsedURL)
+			if err != nil {
+				log.Fatalf("error validating URL: %v\n", err)
+			}
 			filePath := filepath.Join("/var/rvn/img/user/", subPath)
-			_, err := os.Stat(filepath.Join(filePath, imageName))
+			_, err = os.Stat(filepath.Join(filePath, imageName))
 			// path to image does not exist, we will need to download it
 			if err != nil {
 				// first we create all the subdirectorys in the file path
@@ -566,7 +568,7 @@ func CheckRvnImages(topo rvn.Topo) {
 				}
 				// now try to download the image to the correct lcoation
 				log.Println("copying: " + parsedURL.String() + " to: " + filePath + imageName)
-				dl_err := librvnhelp.DownloadURL(parsedURL, filePath, imageName)
+				dl_err := rvn.DownloadURL(parsedURL, filePath, imageName)
 				if dl_err != nil {
 					log.Fatalln(dl_err)
 				}
