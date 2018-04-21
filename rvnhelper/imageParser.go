@@ -31,7 +31,10 @@ func CopyLocalFile(src, dst string) error {
 }
 
 func ValidateURL(input string) *url.URL {
-	parsedURL, _ := url.Parse(input)
+	parsedURL, err := url.Parse(input)
+	if err != nil {
+		log.Errorf("error validating URL: %v\n", err)
+	}
 	return parsedURL
 }
 

@@ -696,7 +696,10 @@ func createImage(h *Host) string {
 		// if name points to a local path or to url
 	} else if len(strings.Split(h.Image, "/")) > 1 {
 		baseImage += "user/"
-		parsedURL, _ := url.Parse(h.Image)
+		parsedURL, err := url.Parse(h.Image)
+		if err != nil {
+			log.Errorf("error validating URL: %v\n", err)
+		}
 		remoteHost := parsedURL.Host
 		// if remoteHost is empty, its a local image
 		if remoteHost == "" {
