@@ -114,8 +114,13 @@ func DownloadFile(filepath string, url string) error {
 }
 
 func CreateNetbootImage() error {
-	cmd := exec.Command("qemu-img", "create", "/var/rvn/img/netboot", "25G")
-	log.Printf("Creating netboot image")
-	err := cmd.Run()
-	return err
+	netbootImage := "/var/rvn/img/netboot"
+	_, err := os.Stat(netbootImage)
+	if err != nil {
+		cmd := exec.Command("qemu-img", "create", netbootImage, "25G")
+		log.Printf("Creating netboot image")
+		err := cmd.Run()
+		return err
+	}
+	return nil
 }
