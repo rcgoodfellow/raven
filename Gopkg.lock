@@ -62,12 +62,6 @@
   version = "v0.0.3"
 
 [[projects]]
-  name = "github.com/rcgoodfellow/walrustf"
-  packages = ["go"]
-  revision = "700ff93349cb142a95385f426c43ed70533e0261"
-  version = "v0.1"
-
-[[projects]]
   name = "github.com/satori/go.uuid"
   packages = ["."]
   revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
@@ -116,6 +110,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "033022066ac007dfa5d75d28b373540e40ef1e76ceb773e7b2fab3f31ba7578e"
+  inputs-digest = "90e00d93de13b16fec7e268bf0a9b3090bb9555a2e1b926102dd38f4de714727"
   solver-name = "gps-cdcl"
   solver-version = 1

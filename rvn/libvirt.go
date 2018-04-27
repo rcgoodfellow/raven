@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"os/exec"
 	"sort"
@@ -208,7 +209,7 @@ func Destroy() {
 		return
 	}
 	topoDir := wd
-	exec.Command("rm", "-rf", topoDir).Run()
+	os.RemoveAll(topoDir)
 
 	for _, x := range topo.Nodes {
 		destroyDomain(topo.QualifyName(x.Name), conn)
@@ -549,7 +550,6 @@ func newDom(h *Host, t *Topo) *xlibvirt.Domain {
 		return x86Dom(h, t)
 
 	}
-
 }
 
 func createModel(h *Host) *xlibvirt.DomainCPUModel {
@@ -686,9 +686,38 @@ func createImage(h *Host) string {
 		return ""
 	}
 
-	baseImage := "/var/rvn/img/" + h.Image + ".qcow2"
-	instanceImage := wd + "/" + h.Name + ".qcow2"
-	exec.Command("rm", "-f", instanceImage).Run()
+	// location of baseImage depends on how image was imported
+	baseImage := "/var/rvn/img/"
+	// the instance name/location will depend on how it is parsed
+	// if name is empty, then load netboot from /rvn/img
+	if h.Image == "" {
+		baseImage += "netboot"
+		// if name points to a local path or to url
+	} else if len(strings.Split(h.Image, "/")) > 1 {
+		baseImage += "user/"
+		parsedURL, err := url.Parse(h.Image)
+		if err != nil {
+			log.Errorf("error validating URL: %v\n", err)
+		}
+		remoteHost := parsedURL.Host
+		// if remoteHost is empty, its a local image
+		if remoteHost == "" {
+			path := strings.Split(h.Image, "/")
+			baseImage += path[len(path)-1]
+		} else {
+			subPath, imageName, err := ParseURL(parsedURL)
+			if err != nil {
+				log.Errorf("error parsing URL: %v\n", err)
+			}
+			baseImage += subPath + imageName
+		}
+		// this only leaves names, which default to deterlab and /rvn/img location
+	} else {
+		baseImage += h.Image
+	}
+
+	instanceImage := wd + "/" + h.Name
+	os.RemoveAll(instanceImage)
 
 	out, err := exec.Command(
 		"qemu-img",
