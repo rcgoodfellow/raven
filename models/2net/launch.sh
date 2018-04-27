@@ -18,6 +18,11 @@ phase "Fetching walrus"
   if [[ ! -d walrustf ]]; then
     git clone https://github.com/rcgoodfellow/walrustf
   fi
+  if [[ ! -x /usr/local/bin/wtf ]]; then
+    wget https://github.com/rcgoodfellow/walrustf/releases/download/v0.1/wtf
+    chmod +x wtf
+    sudo mv wtf /usr/local/bin/
+  fi
 
 phase "Building"
   echo "clearing out any artifacts from previous runs"
