@@ -110,7 +110,7 @@
     # ensure icmp from userspace applications works
     - lineinfile:
         dest: /etc/sysctl.conf
-        line: net.ipv4.ping_group_range="0   2147483647"
+        line: net.ipv4.ping_group_range=0   2147483647
       when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
 
     - lineinfile:
