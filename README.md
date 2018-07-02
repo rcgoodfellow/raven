@@ -60,16 +60,16 @@ I have tested Raven on Debian-Stretch and Ubuntu 16.04. Contributions to support
 
 ### Installing
 
+You will need at least Go 1.8 to build, and [Go's dep](https://github.com/golang/dep) package manager.  Before starting, make sure you have your $GOPATH set (if you do not we recommend: `echo "export GOPATH=~/go" >> ~/.bashrc && source ~/.bashrc`).
+
 ```shell
-git clone git@github.com:rcgoodfellow/raven
-cd raven
+go get github.com/rcgoodfellow/raven
+cd $GOPATH/src/github.com/rcgoodfellow/raven
 ./setup-ansible.sh
 ansible-playbook setup.yml
-
 ```
 
 ### Building
-You will need at least Go 1.8 to build. Then from this directory
 ```
 dep ensure
 make
