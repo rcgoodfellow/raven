@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,11 +12,11 @@ import (
 	"github.com/ceftb/xir/tools/viz"
 	"github.com/fatih/color"
 	"github.com/rcgoodfellow/raven/rvn"
+	log "github.com/sirupsen/logrus"
 	"github.com/sparrc/go-ping"
 )
 
 func main() {
-	log.SetFlags(0)
 
 	checkDir()
 
@@ -492,7 +491,6 @@ func CheckRvnImages(topo rvn.Topo) {
 			images = append(images, currentImg)
 		}
 	}
-
 	// for each unique image, check that it exists, if not, download it
 	for i := range images {
 		// parse the uri reference (with golang url parser)
@@ -505,12 +503,12 @@ func CheckRvnImages(topo rvn.Topo) {
 		if remoteHost == "" {
 			// very first thing, check if url is nil or empty, then we need to create
 			// a netboot image if it does not exist
-			if parsedURL.String() == "" {
+			if parsedURL.String() == "" || parsedURL.String() == "netboot" {
 				err := rvn.CreateNetbootImage()
 				if err != nil {
 					log.Fatalln(err)
 				}
-				break
+				continue
 			}
 			// check if this is local image path, or deterlab path
 			splitPath := strings.Split(images[i], "/")
@@ -547,6 +545,9 @@ func CheckRvnImages(topo rvn.Topo) {
 					var dl_err error = rvn.DownloadFile(filePath, remotePath)
 					// we tried to find the image on deterlab mirror, but could not, error
 					if dl_err != nil {
+						// because DownloadFile will place an empty filePath file, we need to remove it
+						log.Infof("Error occured during download: cleaning up [%s]", filePath)
+						os.Remove(filePath)
 						log.Fatalln(dl_err)
 					}
 				}
